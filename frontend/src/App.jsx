@@ -213,9 +213,62 @@ function formatTime(date) {
   })
 }
 
+const blockGraph = {
+  A: ['B', 'C', 'D'],
+  B: ['A', 'Y'],
+  C: ['A'],
+  D: ['A', 'Y', 'G', 'E'],
+  E: ['D', 'K'],
+  F: ['G', 'T'],
+  G: ['D', 'F', 'I'],
+  H: ['T', 'J'],
+  I: ['G'],
+  J: ['H', 'T'],
+  K: ['E', 'M'],
+  M: ['K'],
+  T: ['F', 'H', 'J'],
+  Y: ['B', 'D'],
+}
+
+function findShortestPath(startBlockId, destinationBlockId) {
+  if (startBlockId === destinationBlockId) {
+    return [startBlockId]
+  }
+
+  const queue = [[startBlockId]]
+  const visited = new Set([startBlockId])
+
+  while (queue.length > 0) {
+    const currentPath = queue.shift()
+    const currentBlock = currentPath[currentPath.length - 1]
+    const neighbours = blockGraph[currentBlock] ?? []
+
+    for (const neighbour of neighbours) {
+      if (visited.has(neighbour)) {
+        continue
+      }
+
+      const nextPath = [...currentPath, neighbour]
+
+      if (neighbour === destinationBlockId) {
+        return nextPath
+      }
+
+      visited.add(neighbour)
+      queue.push(nextPath)
+    }
+  }
+
+  return []
+}
+
 function App() {
   const [activeView, setActiveView] = useState('overview')
   const [selectedBlock, setSelectedBlock] = useState('J')
+  const [selectionPhase, setSelectionPhase] = useState('select-start')
+  const [pendingSelection, setPendingSelection] = useState({ block: 'J', floor: 0 })
+  const [startSelection, setStartSelection] = useState(null)
+  const [destinationSelection, setDestinationSelection] = useState(null)
   const [clock, setClock] = useState(() => formatTime(new Date()))
   const [floorCounts, setFloorCounts] = useState(() =>
     Object.fromEntries(blockLayouts.map((block) => [block.id, 0])),
@@ -231,14 +284,70 @@ function App() {
 
   const handleBlockClick = (blockId) => {
     setSelectedBlock(blockId)
+    const nextFloor = (floorCounts[blockId] + 1) % 5
     setFloorCounts((current) => ({
       ...current,
       [blockId]: (current[blockId] + 1) % 5,
     }))
+    setPendingSelection({ block: blockId, floor: nextFloor })
+  }
+
+  const confirmSelection = () => {
+    if (selectionPhase === 'select-start') {
+      setStartSelection(pendingSelection)
+      setDestinationSelection(null)
+      setSelectionPhase('select-destination')
+      return
+    }
+
+    if (selectionPhase === 'select-destination') {
+      setDestinationSelection(pendingSelection)
+      setSelectionPhase('route-ready')
+    }
+  }
+
+  const resetSelectionFlow = () => {
+    setSelectionPhase('select-start')
+    setStartSelection(null)
+    setDestinationSelection(null)
+    setPendingSelection({ block: selectedBlock, floor: floorCounts[selectedBlock] })
   }
 
   const activeBlock = blockLayouts.find((block) => block.id === selectedBlock)
   const activeBlockMeta = blockInfo[selectedBlock]
+  const hasConfirmedRoute = Boolean(startSelection && destinationSelection)
+  const shortestPathBlocks = hasConfirmedRoute
+    ? findShortestPath(startSelection.block, destinationSelection.block)
+    : []
+  const textualPath = hasConfirmedRoute
+    ? shortestPathBlocks
+        .map((blockId, index) => {
+          let floorNumber = floorCounts[blockId]
+
+          if (index === 0) {
+            floorNumber = startSelection.floor
+          }
+
+          if (index === shortestPathBlocks.length - 1) {
+            floorNumber = destinationSelection.floor
+          }
+
+          return `${blockId} - ${floorNumber}`
+        })
+        .join(' -> ')
+    : 'Path is shown after confirming both start and destination.'
+
+  const selectionPrompt =
+    selectionPhase === 'select-start'
+      ? 'Step 1: Select start block and floor, then confirm.'
+      : selectionPhase === 'select-destination'
+        ? 'Step 2: Select destination block and floor, then confirm.'
+        : 'Route ready. You can reset and pick another path.'
+
+  const routeSummary =
+    hasConfirmedRoute
+      ? `${startSelection.block} - ${startSelection.floor} to ${destinationSelection.block} - ${destinationSelection.floor}`
+      : `${pendingSelection.block} - ${pendingSelection.floor}`
 
   return (
     <div className="app-shell">
@@ -272,9 +381,8 @@ function App() {
           <p className="eyebrow">AMCS Navigator</p>
           <h1>The AMCS Map</h1>
           <p className="hero-text">
-            Tap a block to cycle its floor marker from 0 to 4. The timetable view
-            uses placeholder data for now and is ready to be wired to backend APIs
-            later.
+            Select block and floor in two steps. First confirm the start point, then
+            confirm the destination to render the shortest dummy path with text output.
           </p>
           <div className="hero-meta">
             <div>
@@ -282,8 +390,8 @@ function App() {
               <strong>{clock}</strong>
             </div>
             <div>
-              <span className="meta-label">Selected block</span>
-              <strong>{activeBlockMeta.name}</strong>
+              <span className="meta-label">Selection</span>
+              <strong>{routeSummary}</strong>
             </div>
             <button
               type="button"
@@ -300,10 +408,58 @@ function App() {
         <section className="map-panel card-surface" aria-labelledby="map-panel-title">
           <div className="section-heading">
             <div>
-              <p className="section-kicker">Interactive block map</p>
-              <h2 id="map-panel-title">Tap any block to change the floor marker</h2>
+              <p className="section-kicker">Interactive route map</p>
+              <h2 id="map-panel-title">Confirm start first, then destination</h2>
             </div>
-            <span className="legend-pill">Floor resets to 0 after 4</span>
+            <span className="legend-pill">{selectionPrompt}</span>
+          </div>
+
+          <div className="selection-wizard" aria-label="Route selection controls">
+            <div className="wizard-main">
+              <span className="meta-label">Current pick</span>
+              <strong className="selection-output">
+                {pendingSelection.block} - {pendingSelection.floor}
+              </strong>
+              <div className="floor-picker" role="group" aria-label="Pick floor number">
+                {[0, 1, 2, 3, 4].map((floor) => (
+                  <button
+                    key={`floor-${floor}`}
+                    type="button"
+                    className={`floor-chip ${pendingSelection.floor === floor ? 'is-active' : ''}`}
+                    onClick={() =>
+                      setPendingSelection((current) => ({
+                        ...current,
+                        floor,
+                      }))
+                    }
+                  >
+                    {floor}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="wizard-actions">
+              <button
+                type="button"
+                className="primary-action"
+                onClick={confirmSelection}
+                disabled={selectionPhase === 'route-ready'}
+              >
+                {selectionPhase === 'select-start'
+                  ? 'Confirm start'
+                  : selectionPhase === 'select-destination'
+                    ? 'Confirm destination'
+                    : 'Route confirmed'}
+              </button>
+              <button
+                type="button"
+                className="secondary-action"
+                onClick={resetSelectionFlow}
+              >
+                Reset selection
+              </button>
+            </div>
           </div>
 
           <div className="map-frame">
@@ -311,12 +467,16 @@ function App() {
               {blockLayouts.map((block) => {
                 const blockMeta = blockInfo[block.id]
                 const floor = floorCounts[block.id]
+                const isOnPath = shortestPathBlocks.includes(block.id)
+                const isStart = startSelection?.block === block.id
+                const isDestination = destinationSelection?.block === block.id
+                const isPending = pendingSelection.block === block.id
 
                 return (
                   <button
                     key={block.id}
                     type="button"
-                    className={`map-block tone-${block.tone} ${selectedBlock === block.id ? 'is-selected' : ''}`}
+                    className={`map-block tone-${block.tone} ${selectedBlock === block.id ? 'is-selected' : ''} ${isOnPath ? 'is-on-path' : ''} ${isStart ? 'is-start' : ''} ${isDestination ? 'is-destination' : ''} ${isPending ? 'is-pending' : ''}`}
                     style={{
                       gridRow: `${block.row} / span ${block.height}`,
                       gridColumn: `${block.column} / span ${block.width}`,
@@ -327,9 +487,27 @@ function App() {
                   >
                     <span className="block-id">{block.id}</span>
                     <span className="floor-badge">F{floor}</span>
+                    {isStart ? <span className="path-marker start-marker">Start</span> : null}
+                    {isDestination ? (
+                      <span className="path-marker destination-marker">End</span>
+                    ) : null}
+                    {isPending ? (
+                      <span className="path-marker pending-marker">Pick</span>
+                    ) : null}
                   </button>
                 )
               })}
+            </div>
+
+            <div className="path-strip" aria-label="Dummy path preview">
+              {(shortestPathBlocks.length > 0 ? shortestPathBlocks : [pendingSelection.block]).map(
+                (blockId, index, list) => (
+                <div key={`path-${blockId}`} className="path-chip">
+                  <span>{blockId}</span>
+                  {index < list.length - 1 ? <i className="path-arrow"></i> : null}
+                </div>
+                ),
+              )}
             </div>
 
             <div className="map-legend" aria-label="Map legend">
@@ -349,6 +527,18 @@ function App() {
                 <i className="legend-dot selected"></i>
                 Selected
               </span>
+              <span>
+                <i className="legend-dot start"></i>
+                Start
+              </span>
+              <span>
+                <i className="legend-dot destination"></i>
+                Destination
+              </span>
+              <span>
+                <i className="legend-dot pending"></i>
+                Current pick
+              </span>
             </div>
           </div>
         </section>
@@ -363,6 +553,18 @@ function App() {
           </div>
 
           <div className="detail-stack">
+            <div className="route-summary-card">
+              <span className="meta-label">Dummy route preview</span>
+              <h3>
+                {hasConfirmedRoute
+                  ? `${startSelection.block} - ${startSelection.floor} to ${destinationSelection.block} - ${destinationSelection.floor}`
+                  : 'Waiting for both confirmations'}
+              </h3>
+              <p>
+                {textualPath}
+              </p>
+            </div>
+
             <div className="detail-hero">
               <span className="detail-token">{selectedBlock}</span>
               <div>
@@ -388,7 +590,7 @@ function App() {
               </div>
               <div>
                 <dt>Use case</dt>
-                <dd>Dummy data for frontend preview</dd>
+                <dd>Step-based selection and dummy shortest path</dd>
               </div>
             </dl>
 

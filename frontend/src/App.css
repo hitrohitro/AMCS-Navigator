@@ -147,6 +147,12 @@
   color: #09232c;
 }
 
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
 .secondary-action {
   background: rgba(11, 31, 40, 0.06);
 }
@@ -219,6 +225,69 @@
   gap: 16px;
 }
 
+.selection-wizard,
+.route-summary-card {
+  padding: 16px;
+  border-radius: 22px;
+  background: var(--surface-alt);
+  border: 1px solid rgba(11, 31, 40, 0.08);
+}
+
+.selection-wizard {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.wizard-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.floor-picker {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.floor-chip {
+  min-width: 38px;
+  border-radius: 999px;
+  padding: 8px 10px;
+  border: 1px solid rgba(11, 31, 40, 0.14);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text-primary);
+  font: 700 0.8rem/1 var(--mono);
+  cursor: pointer;
+}
+
+.floor-chip.is-active {
+  border-color: rgba(15, 127, 157, 0.55);
+  background: rgba(15, 127, 157, 0.13);
+}
+
+.wizard-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.selection-output {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(15, 127, 157, 0.1);
+  color: var(--text-primary);
+  font: 700 0.82rem/1 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
 .campus-map {
   display: grid;
   grid-template-columns: repeat(15, minmax(0, 1fr));
@@ -257,6 +326,28 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
+.map-block.is-on-path {
+  filter: saturate(1.15);
+}
+
+.map-block.is-start {
+  box-shadow:
+    0 0 0 3px rgba(231, 43, 99, 0.65),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.map-block.is-destination {
+  box-shadow:
+    0 0 0 3px rgba(111, 214, 72, 0.72),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.map-block.is-pending {
+  box-shadow:
+    0 0 0 3px rgba(255, 196, 92, 0.62),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
 .tone-accent {
   background: linear-gradient(135deg, #0f7f9d, #0a5f73);
 }
@@ -280,6 +371,67 @@
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   font: 700 0.72rem/1 var(--mono);
+}
+
+.path-marker {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  border-radius: 999px;
+  padding: 4px 7px;
+  color: #fff;
+  font: 700 0.65rem/1 var(--mono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.start-marker {
+  background: rgba(231, 43, 99, 0.82);
+}
+
+.destination-marker {
+  background: rgba(111, 214, 72, 0.84);
+}
+
+.pending-marker {
+  background: rgba(255, 196, 92, 0.86);
+  color: #23303a;
+}
+
+.path-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.path-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(15, 127, 157, 0.08);
+  color: var(--text-primary);
+  font: 700 0.8rem/1 var(--mono);
+}
+
+.path-arrow {
+  width: 18px;
+  height: 2px;
+  background: rgba(11, 31, 40, 0.35);
+  position: relative;
+}
+
+.path-arrow::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid rgba(11, 31, 40, 0.35);
+  border-right: 2px solid rgba(11, 31, 40, 0.35);
+  transform: rotate(45deg);
 }
 
 .map-legend {
@@ -319,10 +471,31 @@
   background: #ffc45c;
 }
 
+.legend-dot.start {
+  background: #e72b63;
+}
+
+.legend-dot.destination {
+  background: #6fd648;
+}
+
+.legend-dot.pending {
+  background: #ffc45c;
+}
+
 .detail-stack {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.route-summary-card h3 {
+  margin: 8px 0 8px;
+}
+
+.route-summary-card p {
+  margin: 0;
+  color: var(--text-secondary);
 }
 
 .detail-hero {
@@ -474,6 +647,15 @@
 
   .section-heading {
     flex-direction: column;
+  }
+
+  .wizard-actions {
+    width: 100%;
+  }
+
+  .wizard-actions .primary-action,
+  .wizard-actions .secondary-action {
+    flex: 1 1 0;
   }
 
   .campus-map {
