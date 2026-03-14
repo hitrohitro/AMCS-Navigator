@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:8000'
+
 const blockLayouts = [
   { id: 'I', row: 1, column: 3, width: 6, height: 1, tone: 'neutral' },
   { id: 'H', row: 1, column: 11, width: 2, height: 2, tone: 'accent' },
@@ -225,53 +228,22 @@ function formatTime(date) {
   })
 }
 
-const blockGraph = {
-  A: ['B', 'C', 'D'],
-  B: ['A', 'Y'],
-  C: ['A'],
-  D: ['A', 'Y', 'G', 'E'],
-  E: ['D', 'K'],
-  F: ['G', 'T'],
-  G: ['D', 'F', 'I'],
-  H: ['T', 'J'],
-  I: ['G'],
-  J: ['H', 'T'],
-  K: ['E', 'M'],
-  M: ['K'],
-  T: ['F', 'H', 'J'],
-  Y: ['B', 'D'],
-}
+async function fetchRouteFromApi(sourceSelection, destinationSelection) {
+  const params = new URLSearchParams({
+    source_block: sourceSelection.block,
+    source_floor: String(sourceSelection.floor),
+    dest_block: destinationSelection.block,
+    dest_floor: String(destinationSelection.floor),
+  })
 
-function findShortestPath(startBlockId, destinationBlockId) {
-  if (startBlockId === destinationBlockId) {
-    return [startBlockId]
+  const response = await fetch(`${API_BASE_URL}/api/path?${params.toString()}`)
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}))
+    throw new Error(payload.detail ?? 'Unable to fetch path from backend API.')
   }
 
-  const queue = [[startBlockId]]
-  const visited = new Set([startBlockId])
-
-  while (queue.length > 0) {
-    const currentPath = queue.shift()
-    const currentBlock = currentPath[currentPath.length - 1]
-    const neighbours = blockGraph[currentBlock] ?? []
-
-    for (const neighbour of neighbours) {
-      if (visited.has(neighbour)) {
-        continue
-      }
-
-      const nextPath = [...currentPath, neighbour]
-
-      if (neighbour === destinationBlockId) {
-        return nextPath
-      }
-
-      visited.add(neighbour)
-      queue.push(nextPath)
-    }
-  }
-
-  return []
+  return response.json()
 }
 
 function App() {
@@ -282,6 +254,10 @@ function App() {
   const [hasClickedBlock, setHasClickedBlock] = useState(false)
   const [startSelection, setStartSelection] = useState(null)
   const [destinationSelection, setDestinationSelection] = useState(null)
+  const [shortestPathBlocks, setShortestPathBlocks] = useState([])
+  const [pathInstructions, setPathInstructions] = useState('')
+  const [routeError, setRouteError] = useState('')
+  const [isRouteLoading, setIsRouteLoading] = useState(false)
   const [clock, setClock] = useState(() => formatTime(new Date()))
 
   useEffect(() => {
@@ -304,17 +280,40 @@ function App() {
     })
   }
 
-  const confirmSelection = () => {
+  const confirmSelection = async () => {
     if (selectionPhase === 'select-start') {
       setStartSelection(pendingSelection)
       setDestinationSelection(null)
+      setShortestPathBlocks([])
+      setPathInstructions('')
+      setRouteError('')
       setSelectionPhase('select-destination')
       return
     }
 
     if (selectionPhase === 'select-destination') {
-      setDestinationSelection(pendingSelection)
+      if (!startSelection) {
+        return
+      }
+
+      const selectedDestination = pendingSelection
+      setDestinationSelection(selectedDestination)
       setSelectionPhase('route-ready')
+
+      setIsRouteLoading(true)
+      setRouteError('')
+
+      try {
+        const routeData = await fetchRouteFromApi(startSelection, selectedDestination)
+        setShortestPathBlocks(routeData.path_blocks ?? [])
+        setPathInstructions(routeData.path_instructions ?? '')
+      } catch (error) {
+        setShortestPathBlocks([])
+        setPathInstructions('')
+        setRouteError(error instanceof Error ? error.message : 'Unexpected route error.')
+      } finally {
+        setIsRouteLoading(false)
+      }
     }
   }
 
@@ -323,29 +322,18 @@ function App() {
     setStartSelection(null)
     setDestinationSelection(null)
     setHasClickedBlock(false)
+    setShortestPathBlocks([])
+    setPathInstructions('')
+    setRouteError('')
+    setIsRouteLoading(false)
     setPendingSelection({ block: selectedBlock, floor: 0 })
   }
 
   const activeBlock = blockLayouts.find((block) => block.id === selectedBlock)
   const activeBlockMeta = blockInfo[selectedBlock]
   const hasConfirmedRoute = Boolean(startSelection && destinationSelection)
-  const shortestPathBlocks = hasConfirmedRoute
-    ? findShortestPath(startSelection.block, destinationSelection.block)
-    : []
   const textualPath = hasConfirmedRoute
-    ? shortestPathBlocks
-        .map((blockId, index) => {
-          if (index === 0) {
-            return `${blockId} - ${startSelection.floor}`
-          }
-
-          if (index === shortestPathBlocks.length - 1) {
-            return `${blockId} - ${destinationSelection.floor}`
-          }
-
-          return blockId
-        })
-        .join(' -> ')
+    ? pathInstructions || 'No route instructions available yet.'
     : 'Path is shown after confirming both start and destination.'
 
   const selectionPrompt =
@@ -353,7 +341,11 @@ function App() {
       ? 'Step 1: Select start block and floor, then confirm.'
       : selectionPhase === 'select-destination'
         ? 'Step 2: Select destination block and floor, then confirm.'
-        : 'Route ready. You can reset and pick another path.'
+        : isRouteLoading
+          ? 'Fetching shortest path from backend...'
+          : routeError
+            ? `Route error: ${routeError}`
+            : 'Route ready. You can reset and pick another path.'
 
   const routeSummary =
     hasConfirmedRoute
@@ -441,7 +433,7 @@ function App() {
                     type="button"
                     className="primary-action"
                     onClick={confirmSelection}
-                    disabled={selectionPhase === 'route-ready'}
+                    disabled={selectionPhase === 'route-ready' || isRouteLoading}
                   >
                     {selectionPhase === 'select-start'
                       ? 'Confirm start'
@@ -522,6 +514,11 @@ function App() {
                     ),
                   )}
                 </div>
+
+                <p className="path-text" aria-live="polite">
+                  {textualPath}
+                </p>
+                {routeError ? <p className="route-error">{routeError}</p> : null}
                 </div>{/* end map-main */}
 
                 <div className="map-legend-card" aria-label="Map legend">

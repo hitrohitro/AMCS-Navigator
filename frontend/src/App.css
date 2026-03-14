@@ -490,6 +490,18 @@
   gap: 10px;
 }
 
+.path-text {
+  margin: 0;
+  color: var(--text-primary);
+  font: 600 0.9rem/1.5 var(--mono);
+}
+
+.route-error {
+  margin: 0;
+  color: #9a2033;
+  font: 600 0.86rem/1.4 var(--mono);
+}
+
 .path-chip {
   display: inline-flex;
   align-items: center;
