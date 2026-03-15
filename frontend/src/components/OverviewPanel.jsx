@@ -1,4 +1,27 @@
-import { blockInfo, blockLayouts } from '../data/campusData'
+import { blockInfo, blockLayouts, mapLandmarks } from '../data/campusData'
+
+function LandmarkLayer() {
+  return (
+    <div className="campus-features" aria-hidden="true">
+      {mapLandmarks.map((landmark) => (
+        <div
+          key={landmark.id}
+          data-landmark-id={landmark.id}
+          className={`map-landmark map-landmark--${landmark.type}`}
+          style={{
+            left: `${landmark.x}%`,
+            top: `${landmark.y}%`,
+            width: `${landmark.width}%`,
+            height: `${landmark.height}%`,
+          }}
+        >
+          {landmark.badge ? <span className="landmark-badge">{landmark.badge}</span> : null}
+          <span className="landmark-label">{landmark.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function OverviewPanel({
   selectionPrompt,
@@ -86,6 +109,8 @@ function OverviewPanel({
         <div className="map-frame">
           <div className="map-main">
             <div className="campus-map" role="img" aria-label="Interactive AMCS block map">
+              <LandmarkLayer />
+
               {shouldRenderPathConnections ? (
                 <svg className="route-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
                   {routeSegments.map((segment) => (
@@ -147,6 +172,9 @@ function OverviewPanel({
                     style={{
                       gridRow: `${block.row} / span ${block.height}`,
                       gridColumn: `${block.column} / span ${block.width}`,
+                      ...(['F', 'T'].includes(block.id) ? { marginTop: '18px' } : {}),
+                      ...(block.id === 'H' ? { marginTop: '18px', marginBottom: '-10px' } : {}),
+                      ...(block.id === 'G' ? { marginTop: '12px' } : {}),
                       ...(block.id === 'H' || block.id === 'T' ? { marginRight: '10px' } : {}),
                     }}
                     onClick={() => handleBlockClick(block.id)}
@@ -226,6 +254,10 @@ function OverviewPanel({
                 <span className="legend-item">
                   <i className="legend-line bridge"></i>
                   Horizontal bridge
+                </span>
+                <span className="legend-item">
+                  <i className="legend-badge parking">P</i>
+                  Parking area
                 </span>
               </div>
             </div>
