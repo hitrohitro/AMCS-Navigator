@@ -9,11 +9,151 @@ from app.navigation import (
 	normalize_floor,
 	path_blocks_from_instructions,
 )
-from app.schemas import LocationResponse, RouteResponse
+from app.schemas import (
+	LocationResponse,
+	RouteResponse,
+	SemesterOption,
+	TimetableEntryResponse,
+	TimetableOptionsResponse,
+	TimetableResponse,
+)
 from app.supabase_client import get_location_id, supabase_get
 
 
 app = FastAPI(title=APP_TITLE, version=APP_VERSION)
+
+DAY_ORDER = {
+	'MON': 0,
+	'TUE': 1,
+	'WED': 2,
+	'THU': 3,
+	'FRI': 4,
+	'SAT': 5,
+	'SUN': 6,
+}
+
+TERM_ORDER = {
+	'ODD': 0,
+	'EVEN': 1,
+}
+
+
+def _ordinal(value: int) -> str:
+	if 10 <= value % 100 <= 20:
+		suffix = 'th'
+	else:
+		suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(value % 10, 'th')
+	return f'{value}{suffix} sem'
+
+
+def _normalize_term(term: str) -> str:
+	normalized = term.strip().upper()
+	if normalized not in {'ODD', 'EVEN'}:
+		raise HTTPException(status_code=400, detail='Term must be ODD or EVEN.')
+	return normalized
+
+
+def _normalize_day(day_of_week: str) -> str:
+	normalized = day_of_week.strip().upper()
+	if normalized not in DAY_ORDER:
+		raise HTTPException(status_code=400, detail='day_of_week must be one of MON,TUE,WED,THU,FRI,SAT,SUN.')
+	return normalized
+
+
+def _load_semesters() -> list[dict]:
+	return supabase_get(
+		'semesters',
+		{
+			'select': 'id,academic_year,term,is_active',
+			'order': 'academic_year.asc,term.asc',
+		},
+	)
+
+
+def _semester_sort_key(semester: dict) -> tuple[int, int]:
+	academic_year = str(semester.get('academic_year', '0-0'))
+	start_year_text = academic_year.split('-')[0].strip()
+	try:
+		start_year = int(start_year_text)
+	except ValueError:
+		start_year = 0
+
+	term = str(semester.get('term', '')).upper()
+	return (start_year, TERM_ORDER.get(term, 99))
+
+
+def _all_programmes() -> list[str]:
+	rows = supabase_get(
+		'timetable',
+		{
+			'select': 'programme',
+			'order': 'programme.asc',
+		},
+	)
+
+	return sorted(
+		{
+			str(row.get('programme')).strip()
+			for row in rows
+			if row.get('programme') and str(row.get('programme')).strip()
+		}
+	)
+
+
+def _build_semester_options(
+	all_semesters: list[dict],
+	programme: str | None,
+) -> list[SemesterOption]:
+	if not programme:
+		return []
+
+	programme_rows = supabase_get(
+		'timetable',
+		{
+			'select': 'semester_id',
+			'programme': f'eq.{programme}',
+		},
+	)
+	semester_ids = {int(row['semester_id']) for row in programme_rows if row.get('semester_id') is not None}
+
+	filtered = [semester for semester in all_semesters if int(semester.get('id')) in semester_ids]
+	filtered.sort(key=_semester_sort_key)
+
+	semester_options: list[SemesterOption] = []
+	for index, semester in enumerate(filtered, start=1):
+		semester_options.append(
+			SemesterOption(
+				id=int(semester['id']),
+				academic_year=str(semester['academic_year']),
+				term=str(semester['term']).upper(),
+				is_active=bool(semester.get('is_active')),
+				semester_number=index,
+				semester_label=_ordinal(index),
+			)
+		)
+
+	return semester_options
+
+
+def _pick_semester(semesters: list[dict], academic_year: str | None, term: str | None) -> dict:
+	if bool(academic_year) ^ bool(term):
+		raise HTTPException(status_code=400, detail='Provide both academic_year and term together.')
+
+	if academic_year and term:
+		normalized_term = _normalize_term(term)
+		for semester in semesters:
+			if semester.get('academic_year') == academic_year and str(semester.get('term', '')).upper() == normalized_term:
+				return semester
+		raise HTTPException(status_code=404, detail='Requested semester was not found.')
+
+	active = next((semester for semester in semesters if semester.get('is_active')), None)
+	if active:
+		return active
+
+	if semesters:
+		return semesters[0]
+
+	raise HTTPException(status_code=404, detail='No semesters are available.')
 
 app.add_middleware(
 	CORSMiddleware,
@@ -100,4 +240,113 @@ def get_path(
 		path_instructions=path_instructions,
 		path_blocks=shortest_blocks,
 		cached=False,
+	)
+
+
+@app.get('/api/timetable/options', response_model=TimetableOptionsResponse)
+def get_timetable_options(
+	programme: str | None = Query(default=None),
+	academic_year: str | None = Query(default=None),
+	term: str | None = Query(default=None),
+) -> TimetableOptionsResponse:
+	normalized_programme = programme.strip() if programme else None
+	semesters = _load_semesters()
+	programmes = _all_programmes()
+	semester_options = _build_semester_options(semesters, normalized_programme)
+
+	active_semester = None
+	if semester_options:
+		if academic_year and term:
+			normalized_term = _normalize_term(term)
+			active_semester = next(
+				(
+					semester
+					for semester in semester_options
+					if semester.academic_year == academic_year and semester.term == normalized_term
+				),
+				None,
+			)
+		if active_semester is None:
+			active_semester = next((semester for semester in semester_options if semester.is_active), None)
+		if active_semester is None:
+			active_semester = semester_options[-1]
+
+	return TimetableOptionsResponse(
+		semesters=semester_options,
+		programmes=programmes,
+		active_semester=active_semester,
+	)
+
+
+@app.get('/api/timetable', response_model=TimetableResponse)
+def get_timetable(
+	academic_year: str | None = Query(default=None),
+	term: str | None = Query(default=None),
+	programme: str | None = Query(default=None),
+	day_of_week: str | None = Query(default=None),
+) -> TimetableResponse:
+	semesters = _load_semesters()
+	selected_semester = _pick_semester(semesters, academic_year, term)
+	normalized_programme = programme.strip() if programme else None
+	normalized_day = _normalize_day(day_of_week) if day_of_week else None
+
+	rows = supabase_get(
+		'timetable',
+		{
+			'select': 'id,semester_id,programme,day_of_week,period_number,course_code,room_id',
+			'semester_id': f"eq.{selected_semester['id']}",
+			'order': 'day_of_week.asc,period_number.asc',
+		},
+	)
+
+	if normalized_programme:
+		rows = [row for row in rows if str(row.get('programme') or '').strip() == normalized_programme]
+
+	if normalized_day:
+		rows = [row for row in rows if str(row.get('day_of_week', '')).upper() == normalized_day]
+
+	room_ids = sorted({int(row['room_id']) for row in rows if row.get('room_id') is not None})
+	room_lookup: dict[int, dict] = {}
+
+	if room_ids:
+		room_rows = supabase_get(
+			'rooms',
+			{
+				'select': 'id,room_name,map_node',
+				'id': f"in.({','.join(str(room_id) for room_id in room_ids)})",
+			},
+		)
+		room_lookup = {int(room['id']): room for room in room_rows}
+
+	entries: list[TimetableEntryResponse] = []
+	for row in rows:
+		room_id = int(row['room_id']) if row.get('room_id') is not None else None
+		room = room_lookup.get(room_id) if room_id is not None else None
+		entries.append(
+			TimetableEntryResponse(
+				id=int(row['id']),
+				semester_id=int(row['semester_id']),
+				programme=str(row.get('programme')).strip() if row.get('programme') else None,
+				day_of_week=str(row.get('day_of_week', '')).upper(),
+				period_number=int(row.get('period_number') or 0),
+				course_code=str(row.get('course_code')).strip() if row.get('course_code') else None,
+				room_id=room_id,
+				room_name=str(room.get('room_name')).strip() if room and room.get('room_name') else None,
+				map_node=str(room.get('map_node')).strip() if room and room.get('map_node') else None,
+			)
+		)
+
+	entries.sort(
+		key=lambda item: (
+			DAY_ORDER.get(item.day_of_week, 99),
+			item.period_number,
+		),
+	)
+
+	return TimetableResponse(
+		academic_year=str(selected_semester['academic_year']),
+		term=str(selected_semester['term']).upper(),
+		programme=normalized_programme,
+		day_of_week=normalized_day,
+		entries=entries,
 	)

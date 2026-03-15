@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { SEGMENT_PATH_CACHE } from './data/lineGeometryStore'
 import OverviewPanel from './components/OverviewPanel'
+import TimetablePanel from './components/TimetablePanel'
 import {
   blockLayouts,
   externalLinks,
   horizontalBridges,
-  timetable,
 } from './data/campusData'
-import { fetchRouteFromApi } from './lib/api'
+import {
+  fetchRouteFromApi,
+  fetchTimetableFromApi,
+  fetchTimetableOptions,
+} from './lib/api'
 import { edgeKey, formatTime, parseRouteNodes } from './lib/routeRuntime'
 
 const BRIDGE_EDGE_SET = new Set(
@@ -22,6 +26,133 @@ const ROUTE_CORNER_RADIUS = 1.05
 const SELECTABLE_BLOCK_IDS = new Set(
   blockLayouts.filter((block) => block.tone === 'accent').map((block) => block.id),
 )
+const JS_DAY_TO_CODE = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+const DAY_LABEL_BY_CODE = {
+  MON: 'Monday',
+  TUE: 'Tuesday',
+  WED: 'Wednesday',
+  THU: 'Thursday',
+  FRI: 'Friday',
+  SAT: 'Saturday',
+  SUN: 'Sunday',
+}
+function programmeShortLabel(programmeName) {
+  const normalized = String(programmeName || '')
+    .toUpperCase()
+    .replace(/&/g, ' AND ')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (normalized.includes('THEORETICAL COMPUTER SCIENCE')) {
+    return 'TCS'
+  }
+
+  if (normalized.includes('SOFTWARE SYSTEMS')) {
+    return 'SS'
+  }
+
+  if (normalized.includes('CYBER SECURITY')) {
+    return 'CS'
+  }
+
+  if (normalized.includes('DATA SCIENCE')) {
+    return 'DS'
+  }
+
+  if (normalized.includes('APPLIED MATHEMATICS')) {
+    return 'AM'
+  }
+
+  if (normalized.includes('COMPUTER SYSTEMS') && normalized.includes('DESIGN')) {
+    return 'CSD'
+  }
+
+  return normalized
+}
+
+function FilterDropdown({
+  label,
+  value,
+  options,
+  placeholder,
+  disabled = false,
+  onChange,
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef(null)
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined
+    }
+
+    const handlePointerDown = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+
+    window.addEventListener('pointerdown', handlePointerDown)
+    return () => window.removeEventListener('pointerdown', handlePointerDown)
+  }, [isOpen])
+
+  const selectedOption = options.find((option) => option.value === value)
+  const displayLabel = selectedOption?.label ?? placeholder
+
+  const handlePick = (nextValue) => {
+    onChange(nextValue)
+    setIsOpen(false)
+  }
+
+  return (
+    <label className={`filter-field ${disabled ? 'is-disabled' : ''}`}>
+      <span className="meta-label">{label}</span>
+      <div
+        ref={containerRef}
+        className={`timetable-select-shell ${isOpen ? 'is-open' : ''} ${disabled ? 'is-disabled' : ''}`}
+      >
+        <button
+          type="button"
+          className="timetable-select-trigger"
+          disabled={disabled}
+          onClick={() => setIsOpen((current) => !current)}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          aria-label={label}
+        >
+          <span className={`timetable-select-value ${selectedOption ? 'is-selected' : ''}`}>{displayLabel}</span>
+          <span className="timetable-select-caret" aria-hidden="true">⌄</span>
+        </button>
+
+        {isOpen && !disabled ? (
+          <div className="timetable-select-menu" role="listbox" aria-label={`${label} options`}>
+            <button
+              type="button"
+              className={`timetable-select-option ${value === '' ? 'is-selected' : ''}`}
+              onClick={() => handlePick('')}
+            >
+              {placeholder}
+            </button>
+            {options.map((option) => (
+              <button
+                key={`${label}-${option.value}`}
+                type="button"
+                className={`timetable-select-option ${value === option.value ? 'is-selected' : ''}`}
+                onClick={() => handlePick(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </label>
+  )
+}
+
+function getCurrentDayCode() {
+  return JS_DAY_TO_CODE[new Date().getDay()]
+}
 
 function toCellCenterPercent(col, row) {
   return {
@@ -111,6 +242,7 @@ function App() {
 
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
+  const [activeView, setActiveView] = useState('overview')
   const [selectedBlock, setSelectedBlock] = useState('J')
   const [selectionPhase, setSelectionPhase] = useState('select-start')
   const [pendingSelection, setPendingSelection] = useState({ block: 'J', floor: 0 })
@@ -122,6 +254,23 @@ function App() {
   const [routeError, setRouteError] = useState('')
   const [isRouteLoading, setIsRouteLoading] = useState(false)
   const [clock, setClock] = useState(() => formatTime(new Date()))
+  const [timetableOptions, setTimetableOptions] = useState({
+    semesters: [],
+    programmes: [],
+    active_semester: null,
+  })
+  const [timetableFilters, setTimetableFilters] = useState({
+    academicYear: '',
+    term: '',
+    programme: '',
+  })
+  const [timetableSummary, setTimetableSummary] = useState({
+    academicYear: '',
+    term: '',
+  })
+  const [timetableEntries, setTimetableEntries] = useState([])
+  const [timetableError, setTimetableError] = useState('')
+  const [isTimetableLoading, setIsTimetableLoading] = useState(false)
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -135,6 +284,148 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme)
     window.localStorage.setItem('amcs-theme', theme)
   }, [theme])
+
+  const loadTimetable = async (filters) => {
+    if (!filters.programme) {
+      setTimetableEntries([])
+      setTimetableError('Select a programme first.')
+      return
+    }
+
+    if (!filters.academicYear || !filters.term) {
+      setTimetableEntries([])
+      setTimetableError('Select a semester after choosing programme.')
+      return
+    }
+
+    setIsTimetableLoading(true)
+    setTimetableError('')
+
+    try {
+      const timetableData = await fetchTimetableFromApi(filters)
+      setTimetableEntries(timetableData.entries ?? [])
+      setTimetableSummary({
+        academicYear: timetableData.academic_year,
+        term: timetableData.term,
+      })
+    } catch (error) {
+      setTimetableEntries([])
+      setTimetableError(error instanceof Error ? error.message : 'Unable to fetch timetable.')
+    } finally {
+      setIsTimetableLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function initializeTimetable() {
+      try {
+        const options = await fetchTimetableOptions()
+        if (cancelled) {
+          return
+        }
+
+        setTimetableOptions((current) => ({
+          ...current,
+          programmes: options.programmes ?? [],
+          semesters: [],
+          active_semester: null,
+        }))
+      } catch (error) {
+        if (!cancelled) {
+          setTimetableEntries([])
+          setTimetableError(error instanceof Error ? error.message : 'Unable to fetch timetable options.')
+        }
+      }
+    }
+
+    initializeTimetable()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleSemesterChange = (value) => {
+    if (!value) {
+      setTimetableFilters((current) => ({
+        ...current,
+        academicYear: '',
+        term: '',
+      }))
+      return
+    }
+
+    const [academicYear, term] = value.split('|')
+
+    setTimetableFilters((current) => ({
+      ...current,
+      academicYear,
+      term,
+    }))
+    setTimetableError('')
+  }
+
+  const handleProgrammeChange = async (programme) => {
+
+    setTimetableEntries([])
+    setTimetableSummary({ academicYear: '', term: '' })
+
+    if (!programme) {
+      setTimetableFilters({
+        programme: '',
+        academicYear: '',
+        term: '',
+      })
+      setTimetableOptions((current) => ({
+        ...current,
+        semesters: [],
+        active_semester: null,
+      }))
+      setTimetableError('')
+      return
+    }
+
+    setIsTimetableLoading(true)
+
+    try {
+      const refreshedOptions = await fetchTimetableOptions({ programme })
+      const semester = refreshedOptions.active_semester ?? refreshedOptions.semesters?.[0] ?? null
+
+      setTimetableOptions((current) => ({
+        ...current,
+        semesters: refreshedOptions.semesters ?? [],
+        active_semester: semester,
+      }))
+
+      setTimetableFilters({
+        programme,
+        academicYear: semester?.academic_year ?? '',
+        term: semester?.term ?? '',
+      })
+      setTimetableError('')
+    } catch (error) {
+      setTimetableFilters({
+        programme,
+        academicYear: '',
+        term: '',
+      })
+      setTimetableOptions((current) => ({
+        ...current,
+        semesters: [],
+        active_semester: null,
+      }))
+      setTimetableError(error instanceof Error ? error.message : 'Unable to load semesters for programme.')
+    } finally {
+      setIsTimetableLoading(false)
+    }
+
+  }
+
+  const handleLoadTimetable = async () => {
+    await loadTimetable(timetableFilters)
+  }
 
   const handleBlockClick = (blockId) => {
     if (!SELECTABLE_BLOCK_IDS.has(blockId)) {
@@ -303,9 +594,55 @@ function App() {
   }, [hasConfirmedRoute, routeNodes, blockById, segmentPathCache])
 
   const shouldRenderPathConnections = hasConfirmedRoute && routeSegments.length > 0
+  const todayCode = getCurrentDayCode()
 
-  const todayName = "Saturday"
-  const todaySchedule = timetable.find((day) => day.day === todayName)
+  const todaySchedule = useMemo(() => {
+    const todayEntries = timetableEntries.filter((entry) => entry.day_of_week === todayCode)
+
+    if (todayEntries.length === 0) {
+      return null
+    }
+
+    return {
+      day: DAY_LABEL_BY_CODE[todayCode],
+      items: todayEntries.map((entry) => ({
+        time: `Period ${entry.period_number}`,
+        subject: entry.course_code || 'Course pending',
+        room: entry.room_name
+          ? entry.map_node
+            ? `${entry.room_name} (${entry.map_node})`
+            : entry.room_name
+          : 'Room not assigned',
+        faculty: entry.programme || 'Programme not set',
+      })),
+    }
+  }, [timetableEntries, todayCode])
+
+  const selectedSemesterValue = timetableFilters.academicYear && timetableFilters.term
+    ? `${timetableFilters.academicYear}|${timetableFilters.term}`
+    : ''
+
+  const programmeOptions = timetableOptions.programmes.map((programme) => ({
+    value: programme,
+    label: programmeShortLabel(programme),
+  }))
+
+  const semesterOptions = timetableOptions.semesters.map((semester) => ({
+    value: `${semester.academic_year}|${semester.term}`,
+    label: semester.semester_label ?? `${semester.academic_year} ${semester.term}`,
+  }))
+
+  const selectedSemesterLabel = timetableSummary.academicYear && timetableSummary.term
+    ? `${timetableSummary.academicYear} (${timetableSummary.term})`
+    : timetableFilters.academicYear && timetableFilters.term
+      ? `${timetableFilters.academicYear} (${timetableFilters.term})`
+      : 'No semester selected'
+
+  const selectedSemesterOption = timetableOptions.semesters.find(
+    (semester) => semester.academic_year === timetableFilters.academicYear && semester.term === timetableFilters.term,
+  )
+
+  const selectedSemesterNumberLabel = selectedSemesterOption?.semester_label ?? ''
 
   return (
     <div className="app-shell">
@@ -318,6 +655,13 @@ function App() {
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
           >
             {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
+          </button>
+          <button
+            type="button"
+            className={`nav-chip ${activeView === 'timetable' ? 'is-active' : ''}`}
+            onClick={() => setActiveView((current) => (current === 'overview' ? 'timetable' : 'overview'))}
+          >
+            {activeView === 'overview' ? 'Show timetable' : 'Show map'}
           </button>
           {externalLinks.map((link) => (
             <a
@@ -348,34 +692,88 @@ function App() {
               <strong>{routeSummary}</strong>
             </div>
           </div>
+
+          <div className="timetable-toolbar" aria-label="Timetable filters">
+            <FilterDropdown
+              label="Programme"
+              value={timetableFilters.programme}
+              options={programmeOptions}
+              placeholder="Choose programme"
+              onChange={handleProgrammeChange}
+            />
+
+            <FilterDropdown
+              label="Semester"
+              value={selectedSemesterValue}
+              options={semesterOptions}
+              placeholder="Choose semester"
+              disabled={!timetableFilters.programme}
+              onChange={handleSemesterChange}
+            />
+
+            <button
+              type="button"
+              className="primary-action timetable-load-button"
+              onClick={handleLoadTimetable}
+              disabled={
+                isTimetableLoading ||
+                !timetableFilters.programme ||
+                !timetableFilters.academicYear ||
+                !timetableFilters.term
+              }
+            >
+              {isTimetableLoading ? 'Loading...' : 'Load timetable'}
+            </button>
+          </div>
+
+          {selectedSemesterNumberLabel ? (
+            <p className="timetable-hint">
+              Selected: {selectedSemesterNumberLabel} ({selectedSemesterLabel})
+            </p>
+          ) : null}
+
+          {timetableError ? <p className="route-error timetable-error">{timetableError}</p> : null}
         </div>
       </header>
 
       <main className="content-grid">
-        <OverviewPanel
-          selectionPrompt={selectionPrompt}
-          pendingSelection={pendingSelection}
-          setPendingSelection={setPendingSelection}
-          confirmSelection={confirmSelection}
-          selectionPhase={selectionPhase}
-          isRouteLoading={isRouteLoading}
-          resetSelectionFlow={resetSelectionFlow}
-          shouldRenderPathConnections={shouldRenderPathConnections}
-          routeSegments={routeSegments}
-          routeNodes={routeNodes}
-          blockById={blockById}
-          shortestPathBlocks={shortestPathBlocks}
-          startSelection={startSelection}
-          destinationSelection={destinationSelection}
-          hasConfirmedRoute={hasConfirmedRoute}
-          hasClickedBlock={hasClickedBlock}
-          selectedBlock={selectedBlock}
-          handleBlockClick={handleBlockClick}
-          textualPath={textualPath}
-          routeError={routeError}
-          pathInstructions={pathInstructions}
-          todaySchedule={todaySchedule}
-        />
+        {activeView === 'overview' ? (
+          <OverviewPanel
+            selectionPrompt={selectionPrompt}
+            pendingSelection={pendingSelection}
+            setPendingSelection={setPendingSelection}
+            confirmSelection={confirmSelection}
+            selectionPhase={selectionPhase}
+            isRouteLoading={isRouteLoading}
+            resetSelectionFlow={resetSelectionFlow}
+            shouldRenderPathConnections={shouldRenderPathConnections}
+            routeSegments={routeSegments}
+            routeNodes={routeNodes}
+            blockById={blockById}
+            shortestPathBlocks={shortestPathBlocks}
+            startSelection={startSelection}
+            destinationSelection={destinationSelection}
+            hasConfirmedRoute={hasConfirmedRoute}
+            hasClickedBlock={hasClickedBlock}
+            selectedBlock={selectedBlock}
+            handleBlockClick={handleBlockClick}
+            textualPath={textualPath}
+            routeError={routeError}
+            pathInstructions={pathInstructions}
+            todaySchedule={todaySchedule}
+            todayTimetableLoading={isTimetableLoading}
+            todayTimetableError={timetableError}
+          />
+        ) : (
+          <TimetablePanel
+            timetableEntries={timetableEntries}
+            timetableLoading={isTimetableLoading}
+            timetableError={timetableError}
+            selectedSemesterLabel={selectedSemesterLabel}
+            selectedProgramme={programmeShortLabel(timetableFilters.programme)}
+            onBackToMap={() => setActiveView('overview')}
+          />
+        )}
       </main>
       <footer className="bottom-bar" aria-label="Quick links">
         {externalLinks.map((link) => (

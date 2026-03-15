@@ -32,44 +32,6 @@ export const blockInfo = {
   Y: { name: 'Youth Incubation Cell', department: 'Startup mentoring', connector: 'Vertical link lobby' },
 }
 
-export const timetable = [
-  {
-    day: 'Monday',
-    items: [
-      { time: '08:30 - 09:20', subject: 'Machine Learning', room: 'J201', faculty: 'Dr. V. Kumar' },
-      { time: '09:30 - 10:20', subject: 'UI Engineering', room: 'D104', faculty: 'Prof. N. Meena' },
-      { time: '10:40 - 12:20', subject: 'Compiler Lab', room: 'A302', faculty: 'Ms. Deepa' },
-      { time: '13:20 - 14:10', subject: 'Probability', room: 'G105', faculty: 'Dr. Saravanan' },
-    ],
-  },
-  {
-    day: 'Tuesday',
-    items: [
-      { time: '08:30 - 09:20', subject: 'Database Systems', room: 'H103', faculty: 'Dr. Shalini' },
-      { time: '09:30 - 10:20', subject: 'Placement Training', room: 'I Hall', faculty: 'Career Cell' },
-      { time: '11:30 - 12:20', subject: 'Open Elective', room: 'K204', faculty: 'Guest Faculty' },
-      { time: '14:20 - 16:00', subject: 'Mini Project Review', room: 'M Lab', faculty: 'Panel' },
-    ],
-  },
-  {
-    day: 'Wednesday',
-    items: [
-      { time: '08:30 - 10:10', subject: 'Networks Lab', room: 'E202', faculty: 'Mr. Prakash' },
-      { time: '10:30 - 11:20', subject: 'Software Design', room: 'T101', faculty: 'Ms. Revathi' },
-      { time: '13:20 - 14:10', subject: 'Mentor Hour', room: 'Y Hub', faculty: 'Faculty Advisor' },
-      { time: '14:20 - 15:10', subject: 'Free Slot', room: 'Library', faculty: 'Self study' },
-    ],
-  },
-  {
-    day: 'Saturday',
-    items: [
-      { time: '09:00 - 10:00', subject: 'Workshop on AI', room: 'Auditorium', faculty: 'Dr. A. Kumar' },
-      { time: '10:30 - 11:30', subject: 'Group Discussion', room: 'Seminar Hall', faculty: 'Prof. B. Singh' },
-      { time: '13:00 - 14:00', subject: 'Sports Activity', room: 'Ground', faculty: 'Physical Education Dept' },
-    ],
-  },
-]
-
 export const externalLinks = [
   { id: 'ecampus', label: 'eCampus', href: 'https://ecampus.psgtech.ac.in/studzone/' },
   { id: 'hostel', label: 'Hostel', href: 'https://edviewx.psgtech.ac.in/Hostel' },
@@ -83,7 +45,7 @@ export const mapLandmarks = [
     x: 36.5,
     y: 98,
     width: 10,
-    height: 10,
+    height: 8,
   },
   {
     id: 'cube-fountain',
@@ -99,16 +61,16 @@ export const mapLandmarks = [
     type: 'bridge-access',
     label: 'Bridge',
     x: 57,
-    y: 90,
+    y: 89,
     width: 4,
-    height: 28,
+    height: 26,
   },
   {
     id: 'rear-gate',
     type: 'gate',
     label: 'Rear Gate',
-    x: 97,
-    y: 4,
+    x: 99,
+    y: 6,
     width: 4,
     height: 11,
   },
@@ -117,10 +79,10 @@ export const mapLandmarks = [
     type: 'parking',
     label: 'Parking Area',
     badge: 'P',
-    x: 90,
-    y: 4,
+    x: 93,
+    y: 6,
     width: 5,
-    height: 13,
+    height: 11,
   },
 ]
 

@@ -46,6 +46,8 @@ function OverviewPanel({
   routeError,
   pathInstructions,
   todaySchedule,
+  todayTimetableLoading,
+  todayTimetableError,
 }) {
   return (
     <>
@@ -290,9 +292,16 @@ function OverviewPanel({
 
       <section className="today-timetable">
         <div className="section-heading">
-          <h2>Today's Timetable</h2>
+          <div>
+            <p className="section-kicker">Today</p>
+            <h2>{todaySchedule?.day ?? "Today's timetable"}</h2>
+          </div>
         </div>
-        {todaySchedule ? (
+
+        {todayTimetableLoading ? <p className="route-guide-text">Loading timetable...</p> : null}
+        {todayTimetableError ? <p className="route-error">{todayTimetableError}</p> : null}
+
+        {!todayTimetableLoading && !todayTimetableError && todaySchedule ? (
           <div className="session-list">
             {todaySchedule.items.map((item) => (
               <div key={item.time} className="session-card">
@@ -303,9 +312,9 @@ function OverviewPanel({
               </div>
             ))}
           </div>
-        ) : (
+        ) : !todayTimetableLoading && !todayTimetableError ? (
           <p>No schedule for today</p>
-        )}
+        ) : null}
       </section>
     </>
   )
