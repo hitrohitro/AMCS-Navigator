@@ -1,7 +1,7 @@
 export const blockLayouts = [
   { id: 'I', row: 1, column: 3, width: 6, height: 1, tone: 'neutral' },
   { id: 'H', row: 1, column: 11, width: 2, height: 2, tone: 'accent' },
-  { id: 'J', row: 2, column: 13, width: 3, height: 3, tone: 'accent' },
+  { id: 'J', row: 3, column: 13, width: 3, height: 4, tone: 'accent' },
   { id: 'B', row: 4, column: 1, width: 3, height: 2, tone: 'neutral' },
   { id: 'Y', row: 4, column: 4, width: 1, height: 4, tone: 'accent' },
   { id: 'G', row: 3, column: 6, width: 2, height: 4, tone: 'neutral' },
@@ -73,6 +73,55 @@ export const timetable = [
 export const externalLinks = [
   { id: 'ecampus', label: 'eCampus', href: 'https://ecampus.psgtech.ac.in/studzone/' },
   { id: 'hostel', label: 'Hostel', href: 'https://edviewx.psgtech.ac.in/Hostel' },
+]
+
+export const mapLandmarks = [
+  {
+    id: 'main-gate',
+    type: 'gate',
+    label: 'Main Gate',
+    x: 36.5,
+    y: 98,
+    width: 10,
+    height: 10,
+  },
+  {
+    id: 'cube-fountain',
+    type: 'fountain',
+    label: '',
+    x: 36.5,
+    y: 78,
+    width: 5,
+    height: 5,
+  },
+  {
+    id: 'tech-bridge',
+    type: 'bridge-access',
+    label: 'Bridge',
+    x: 57,
+    y: 90,
+    width: 4,
+    height: 28,
+  },
+  {
+    id: 'rear-gate',
+    type: 'gate',
+    label: 'Rear Gate',
+    x: 97,
+    y: 4,
+    width: 4,
+    height: 11,
+  },
+  {
+    id: 'parking-area',
+    type: 'parking',
+    label: 'Parking Area',
+    badge: 'P',
+    x: 90,
+    y: 4,
+    width: 5,
+    height: 13,
+  },
 ]
 
 export const horizontalBridges = [
