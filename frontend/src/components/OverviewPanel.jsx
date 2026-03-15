@@ -123,6 +123,7 @@ function OverviewPanel({
 
               {blockLayouts.map((block) => {
                 const blockMeta = blockInfo[block.id]
+                const isInteractiveBlock = block.tone === 'accent'
                 const isOnPath = shortestPathBlocks.includes(block.id)
                 const isStart = startSelection?.block === block.id
                 const isDestination = destinationSelection?.block === block.id
@@ -142,14 +143,16 @@ function OverviewPanel({
                   <button
                     key={block.id}
                     type="button"
-                    className={`map-block tone-${block.tone} ${selectedBlock === block.id ? 'is-selected' : ''} ${isOnPath ? 'is-on-path' : ''} ${isStart ? 'is-start' : ''} ${isDestination ? 'is-destination' : ''}`}
+                    className={`map-block tone-${block.tone} ${selectedBlock === block.id ? 'is-selected' : ''} ${isOnPath ? 'is-on-path' : ''} ${isStart ? 'is-start' : ''} ${isDestination ? 'is-destination' : ''} ${isInteractiveBlock ? '' : 'is-static'}`}
                     style={{
                       gridRow: `${block.row} / span ${block.height}`,
                       gridColumn: `${block.column} / span ${block.width}`,
                       ...(block.id === 'H' || block.id === 'T' ? { marginRight: '10px' } : {}),
                     }}
                     onClick={() => handleBlockClick(block.id)}
+                    disabled={!isInteractiveBlock}
                     aria-pressed={selectedBlock === block.id}
+                    aria-disabled={!isInteractiveBlock}
                     aria-label={`${block.id} block, ${blockMeta.name}, floor ${floor}`}
                   >
                     <span className="block-id">{block.id}</span>

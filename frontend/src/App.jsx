@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { SEGMENT_PATH_CACHE } from './data/lineGeometryStore'
 import OverviewPanel from './components/OverviewPanel'
-import TimetablePanel from './components/TimetablePanel'
 import {
   blockLayouts,
   externalLinks,
@@ -20,6 +19,9 @@ const GRID_COLS = 15
 const GRID_ROWS = 11
 
 const ROUTE_CORNER_RADIUS = 1.05
+const SELECTABLE_BLOCK_IDS = new Set(
+  blockLayouts.filter((block) => block.tone === 'accent').map((block) => block.id),
+)
 
 function toCellCenterPercent(col, row) {
   return {
@@ -109,7 +111,6 @@ function App() {
 
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
-  const [activeView, setActiveView] = useState('overview')
   const [selectedBlock, setSelectedBlock] = useState('J')
   const [selectionPhase, setSelectionPhase] = useState('select-start')
   const [pendingSelection, setPendingSelection] = useState({ block: 'J', floor: 0 })
@@ -136,6 +137,10 @@ function App() {
   }, [theme])
 
   const handleBlockClick = (blockId) => {
+    if (!SELECTABLE_BLOCK_IDS.has(blockId)) {
+      return
+    }
+
     setSelectedBlock(blockId)
     setHasClickedBlock(true)
     setPendingSelection((current) => {
@@ -347,37 +352,30 @@ function App() {
       </header>
 
       <main className="content-grid">
-        {activeView === 'overview' ? (
-          <OverviewPanel
-            selectionPrompt={selectionPrompt}
-            pendingSelection={pendingSelection}
-            setPendingSelection={setPendingSelection}
-            confirmSelection={confirmSelection}
-            selectionPhase={selectionPhase}
-            isRouteLoading={isRouteLoading}
-            resetSelectionFlow={resetSelectionFlow}
-            shouldRenderPathConnections={shouldRenderPathConnections}
-            routeSegments={routeSegments}
-            routeNodes={routeNodes}
-            blockById={blockById}
-            shortestPathBlocks={shortestPathBlocks}
-            startSelection={startSelection}
-            destinationSelection={destinationSelection}
-            hasConfirmedRoute={hasConfirmedRoute}
-            hasClickedBlock={hasClickedBlock}
-            selectedBlock={selectedBlock}
-            handleBlockClick={handleBlockClick}
-            textualPath={textualPath}
-            routeError={routeError}
-            pathInstructions={pathInstructions}
-            todaySchedule={todaySchedule}
-          />
-        ) : activeView === 'timetable' ? (
-          <TimetablePanel
-            timetable={timetable}
-            onBackToMap={() => setActiveView('overview')}
-          />
-        ) : null}
+        <OverviewPanel
+          selectionPrompt={selectionPrompt}
+          pendingSelection={pendingSelection}
+          setPendingSelection={setPendingSelection}
+          confirmSelection={confirmSelection}
+          selectionPhase={selectionPhase}
+          isRouteLoading={isRouteLoading}
+          resetSelectionFlow={resetSelectionFlow}
+          shouldRenderPathConnections={shouldRenderPathConnections}
+          routeSegments={routeSegments}
+          routeNodes={routeNodes}
+          blockById={blockById}
+          shortestPathBlocks={shortestPathBlocks}
+          startSelection={startSelection}
+          destinationSelection={destinationSelection}
+          hasConfirmedRoute={hasConfirmedRoute}
+          hasClickedBlock={hasClickedBlock}
+          selectedBlock={selectedBlock}
+          handleBlockClick={handleBlockClick}
+          textualPath={textualPath}
+          routeError={routeError}
+          pathInstructions={pathInstructions}
+          todaySchedule={todaySchedule}
+        />
       </main>
       <footer className="bottom-bar" aria-label="Quick links">
         {externalLinks.map((link) => (

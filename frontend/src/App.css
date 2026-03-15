@@ -459,6 +459,17 @@
     inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
+.map-block:disabled,
+.map-block.is-static {
+  cursor: default;
+}
+
+.map-block:disabled:hover,
+.map-block:disabled:focus-visible {
+  transform: none;
+  border-color: transparent;
+}
+
 .tone-accent {
   background: linear-gradient(
     145deg,
