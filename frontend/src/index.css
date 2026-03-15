@@ -12,6 +12,43 @@
   --accent: #ffc45c;
   --accent-strong: #48e3c4;
   --shadow-soft: 0 20px 55px rgba(8, 24, 32, 0.12);
+
+  --secondary-btn-bg: rgba(11, 31, 40, 0.06);
+  --panel-border: rgba(11, 31, 40, 0.08);
+  --chip-border: rgba(11, 31, 40, 0.14);
+  --chip-bg: rgba(255, 255, 255, 0.85);
+  --chip-active-border: rgba(15, 127, 157, 0.55);
+  --chip-active-bg: rgba(15, 127, 157, 0.13);
+  --selection-bg: rgba(15, 127, 157, 0.1);
+  --map-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(230, 237, 241, 0.92)),
+    linear-gradient(135deg, rgba(72, 227, 196, 0.08), rgba(8, 24, 32, 0.08));
+  --map-border: rgba(11, 31, 40, 0.08);
+  --route-node-stroke: rgba(8, 24, 32, 0.58);
+  --route-node-label: rgba(8, 24, 32, 0.82);
+  --path-chip-bg: rgba(15, 127, 157, 0.08);
+  --path-arrow: rgba(11, 31, 40, 0.35);
+  --panel-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(239, 245, 247, 0.95));
+  --route-guide-bg:
+    linear-gradient(150deg, rgba(15, 127, 157, 0.08), rgba(255, 255, 255, 0.96)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(239, 245, 247, 0.95));
+  --legend-item-bg: rgba(11, 31, 40, 0.06);
+  --legend-item-border: rgba(11, 31, 40, 0.08);
+  --day-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(234, 241, 243, 0.92));
+  --session-border: rgba(11, 31, 40, 0.08);
+  --error-color: #9a2033;
+  --block-accent-from: #d14e8a;
+  --block-accent-mid: #b64386;
+  --block-accent-to: #8f356a;
+  --block-neutral-from: #2f8aa3;
+  --block-neutral-mid: #287591;
+  --block-neutral-to: #1f5e74;
+  --block-sheen: rgba(255, 255, 255, 0.22);
+  --legend-connector: #f2a65a;
+  --legend-accent: #c63f7e;
+  --legend-neutral: #267992;
+  --selected-indicator: #2f86ff;
+  --selected-indicator-soft: rgba(47, 134, 255, 0.2);
   --heading: Bahnschrift, 'Arial Narrow', 'Trebuchet MS', sans-serif;
   --body: 'Trebuchet MS', Verdana, sans-serif;
   --mono: Consolas, 'Courier New', monospace;
@@ -44,15 +81,68 @@ body {
   min-height: 100vh;
 }
 
+:root[data-theme='dark'] {
+  --bg: #091018;
+  --bg-deep: #060b12;
+  --surface: rgba(15, 24, 36, 0.9);
+  --surface-alt: rgba(20, 31, 45, 0.88);
+  --border-strong: rgba(135, 167, 192, 0.24);
+  --text-primary: #e9f4ff;
+  --text-secondary: #b0c3d7;
+  --text-muted: rgba(214, 234, 255, 0.68);
+  --text-muted-dark: #89a4bf;
+  --text-inverse: #f4fbff;
+  --accent: #f7b84d;
+  --accent-strong: #2fd8b4;
+  --shadow-soft: 0 24px 65px rgba(1, 6, 12, 0.5);
+
+  --secondary-btn-bg: rgba(20, 31, 45, 0.86);
+  --panel-border: rgba(135, 167, 192, 0.22);
+  --chip-border: rgba(135, 167, 192, 0.32);
+  --chip-bg: rgba(28, 42, 60, 0.92);
+  --chip-active-border: rgba(47, 216, 180, 0.62);
+  --chip-active-bg: rgba(47, 216, 180, 0.18);
+  --selection-bg: rgba(47, 216, 180, 0.18);
+  --map-bg:
+    linear-gradient(180deg, rgba(13, 21, 31, 0.92), rgba(10, 16, 25, 0.95)),
+    linear-gradient(135deg, rgba(47, 216, 180, 0.09), rgba(9, 16, 24, 0.3));
+  --map-border: rgba(135, 167, 192, 0.2);
+  --route-node-stroke: rgba(230, 242, 255, 0.65);
+  --route-node-label: rgba(236, 246, 255, 0.94);
+  --path-chip-bg: rgba(47, 216, 180, 0.16);
+  --path-arrow: rgba(201, 223, 243, 0.7);
+  --panel-card-bg: linear-gradient(180deg, rgba(18, 28, 40, 0.95), rgba(14, 23, 34, 0.94));
+  --route-guide-bg:
+    linear-gradient(150deg, rgba(47, 216, 180, 0.09), rgba(15, 24, 36, 0.95)),
+    linear-gradient(180deg, rgba(18, 28, 40, 0.96), rgba(14, 23, 34, 0.95));
+  --legend-item-bg: rgba(33, 49, 67, 0.74);
+  --legend-item-border: rgba(135, 167, 192, 0.22);
+  --day-card-bg: linear-gradient(180deg, rgba(18, 28, 40, 0.95), rgba(13, 21, 32, 0.94));
+  --session-border: rgba(135, 167, 192, 0.22);
+  --error-color: #ff7e95;
+  --block-accent-from: #ba4e97;
+  --block-accent-mid: #9f4688;
+  --block-accent-to: #7a2f63;
+  --block-neutral-from: #4890b3;
+  --block-neutral-mid: #3d7fa1;
+  --block-neutral-to: #2e5f7f;
+  --block-sheen: rgba(228, 244, 255, 0.2);
+  --legend-connector: #f7b84d;
+  --legend-accent: #ba4e97;
+  --legend-neutral: #4890b3;
+  --selected-indicator: #63c6ff;
+  --selected-indicator-soft: rgba(99, 198, 255, 0.24);
+}
+
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+    linear-gradient(rgba(178, 208, 236, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(178, 208, 236, 0.09) 1px, transparent 1px);
   background-size: 32px 32px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.34), transparent 78%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.46), transparent 80%);
   pointer-events: none;
 }
 
