@@ -5,6 +5,7 @@ import { SEGMENT_PATH_CACHE } from './data/lineGeometryStore'
 import OverviewPanel from './components/OverviewPanel'
 import TimetablePanel from './components/TimetablePanel'
 import {
+  BLOCK_MAX_FLOOR,
   blockLayouts,
   externalLinks,
   horizontalBridges,
@@ -509,8 +510,9 @@ function App() {
     setSelectedBlock(blockId)
     setHasClickedBlock(true)
     setPendingSelection((current) => {
+      const maxFloor = BLOCK_MAX_FLOOR[blockId] ?? 4
       if (current.block === blockId) {
-        return { block: blockId, floor: (current.floor + 1) % 5 }
+        return { block: blockId, floor: (current.floor + 1) % (maxFloor + 1) }
       }
 
       return { block: blockId, floor: 0 }

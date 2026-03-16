@@ -32,6 +32,14 @@ export const blockInfo = {
   Y: { name: 'Youth Incubation Cell', department: 'Startup mentoring', connector: 'Vertical link lobby' },
 }
 
+// Maximum valid floor number per block (floors 0 → maxFloor are selectable)
+// Blocks not listed default to floor 4 (the widest range currently in the map)
+export const BLOCK_MAX_FLOOR = {
+  A: 3,
+  H: 1,
+  T: 0,
+}
+
 export const externalLinks = [
   { id: 'ecampus', label: 'eCampus', href: 'https://ecampus.psgtech.ac.in/studzone/' },
   { id: 'hostel', label: 'Hostel', href: 'https://edviewx.psgtech.ac.in/Hostel' },

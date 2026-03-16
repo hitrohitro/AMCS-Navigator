@@ -426,6 +426,13 @@
   background: var(--chip-active-bg);
 }
 
+.floor-chip.is-disabled,
+.floor-chip:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .wizard-actions {
   display: flex;
   gap: 10px;
@@ -1382,7 +1389,7 @@
 
 .map-panel .section-heading,
 .timetable-panel .section-heading {
-  margin-bottom: 0;
+  margin-bottom: 16px;
 }
 
 .timetable-panel:not(.is-prominent) {

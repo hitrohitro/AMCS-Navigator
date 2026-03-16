@@ -1,4 +1,4 @@
-import { blockInfo, blockLayouts, mapLandmarks } from '../data/campusData'
+import { blockInfo, blockLayouts, mapLandmarks, BLOCK_MAX_FLOOR } from '../data/campusData'
 
 function LandmarkLayer() {
   return (
@@ -73,21 +73,26 @@ function OverviewPanel({
               {pendingSelection.block} - {pendingSelection.floor}
             </strong>
             <div className="floor-picker" role="group" aria-label="Pick floor number">
-              {[0, 1, 2, 3, 4].map((floor) => (
-                <button
-                  key={`floor-${floor}`}
-                  type="button"
-                  className={`floor-chip ${pendingSelection.floor === floor ? 'is-active' : ''}`}
-                  onClick={() =>
-                    setPendingSelection((current) => ({
-                      ...current,
-                      floor,
-                    }))
-                  }
-                >
-                  {floor}
-                </button>
-              ))}
+              {[0, 1, 2, 3, 4].map((floor) => {
+                const maxFloor = BLOCK_MAX_FLOOR[pendingSelection.block] ?? 4
+                const isDisabled = floor > maxFloor
+                return (
+                  <button
+                    key={`floor-${floor}`}
+                    type="button"
+                    className={`floor-chip ${pendingSelection.floor === floor ? 'is-active' : ''} ${isDisabled ? 'is-disabled' : ''}`}
+                    disabled={isDisabled}
+                    onClick={() =>
+                      setPendingSelection((current) => ({
+                        ...current,
+                        floor,
+                      }))
+                    }
+                  >
+                    {floor}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
