@@ -14,7 +14,7 @@ import {
   fetchTimetableFromApi,
   fetchTimetableOptions,
 } from './lib/api'
-import { PERIOD_TIMES, edgeKey, formatPeriodTime, formatTime, parseRouteNodes } from './lib/routeRuntime'
+import { PERIOD_TIMES, PERIOD_WINDOWS, edgeKey, formatPeriodTime, formatTime, parseRouteNodes } from './lib/routeRuntime'
 
 const BRIDGE_EDGE_SET = new Set(
   horizontalBridges.map(([a, b]) => edgeKey(a, b)),
@@ -40,6 +40,36 @@ const DAY_LABEL_BY_CODE = {
 const PERIOD_SEQUENCE = Object.keys(PERIOD_TIMES)
   .map(Number)
   .sort((a, b) => a - b)
+const SMART_MODE_OPTIONS = [
+  { value: 'previous', label: 'Previous' },
+  { value: 'current', label: 'Current' },
+  { value: 'next', label: 'Next' },
+]
+const ARRIVAL_BUFFER_MINUTES = 12
+
+function minutesSinceMidnight(date) {
+  return date.getHours() * 60 + date.getMinutes()
+}
+
+function parseDestinationFromEntry(entry) {
+  const candidates = [entry?.map_node, entry?.room_name]
+
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue
+    }
+
+    const match = String(candidate).toUpperCase().match(/\b([A-Z])\s*[- ]?\s*([0-4])\b/)
+    if (match) {
+      return {
+        block: match[1],
+        floor: Number(match[2]),
+      }
+    }
+  }
+
+  return null
+}
 
 function programmeShortLabel(programmeName) {
   const normalized = String(programmeName || '')
@@ -305,6 +335,9 @@ function App() {
   const [timetableEntries, setTimetableEntries] = useState([])
   const [timetableError, setTimetableError] = useState('')
   const [isTimetableLoading, setIsTimetableLoading] = useState(false)
+  const [isTimetableLoaded, setIsTimetableLoaded] = useState(false)
+  const [smartMode, setSmartMode] = useState('current')
+  const [smartPeriodIndex, setSmartPeriodIndex] = useState(null)
   const programmeRequestRef = useRef(null)
 
   useEffect(() => {
@@ -324,12 +357,16 @@ function App() {
     if (!filters.programme) {
       setTimetableEntries([])
       setTimetableError('Select a programme first.')
+      setIsTimetableLoaded(false)
+      setSmartPeriodIndex(null)
       return
     }
 
     if (!filters.semesterId) {
       setTimetableEntries([])
       setTimetableError('Select a semester after choosing programme.')
+      setIsTimetableLoaded(false)
+      setSmartPeriodIndex(null)
       return
     }
 
@@ -343,9 +380,13 @@ function App() {
         academicYear: timetableData.academic_year,
         term: timetableData.term,
       })
+      setIsTimetableLoaded(true)
+      setSmartPeriodIndex(null)
     } catch (error) {
       setTimetableEntries([])
       setTimetableError(error instanceof Error ? error.message : 'Unable to fetch timetable.')
+      setIsTimetableLoaded(false)
+      setSmartPeriodIndex(null)
     } finally {
       setIsTimetableLoading(false)
     }
@@ -385,17 +426,23 @@ function App() {
   const handleSemesterChange = (value) => {
     if (!value) {
       setTimetableFilters((current) => ({ ...current, semesterId: '' }))
+      setIsTimetableLoaded(false)
+      setSmartPeriodIndex(null)
       return
     }
 
     setTimetableFilters((current) => ({ ...current, semesterId: value }))
     setTimetableError('')
+    setIsTimetableLoaded(false)
+    setSmartPeriodIndex(null)
   }
 
   const handleProgrammeChange = async (programme) => {
-  programmeRequestRef.current = programme
+    programmeRequestRef.current = programme
 
-  setTimetableEntries([])
+    setTimetableEntries([])
+    setIsTimetableLoaded(false)
+    setSmartPeriodIndex(null)
     setTimetableSummary({ academicYear: '', term: '' })
 
     if (!programme) {
@@ -470,6 +517,25 @@ function App() {
     })
   }
 
+  const fetchRouteForSelection = async (source, destination) => {
+    setDestinationSelection(destination)
+    setSelectionPhase('route-ready')
+    setIsRouteLoading(true)
+    setRouteError('')
+
+    try {
+      const routeData = await fetchRouteFromApi(source, destination)
+      setShortestPathBlocks(routeData.path_blocks ?? [])
+      setPathInstructions(routeData.path_instructions ?? '')
+    } catch (error) {
+      setShortestPathBlocks([])
+      setPathInstructions('')
+      setRouteError(error instanceof Error ? error.message : 'Unexpected route error.')
+    } finally {
+      setIsRouteLoading(false)
+    }
+  }
+
   const confirmSelection = async () => {
     if (selectionPhase === 'select-start') {
       setStartSelection(pendingSelection)
@@ -487,24 +553,143 @@ function App() {
       }
 
       const selectedDestination = pendingSelection
-      setDestinationSelection(selectedDestination)
-      setSelectionPhase('route-ready')
+      await fetchRouteForSelection(startSelection, selectedDestination)
+    }
+  }
 
-      setIsRouteLoading(true)
-      setRouteError('')
+  const handleSmartModeChange = (nextMode) => {
+    setSmartMode(nextMode)
 
-      try {
-        const routeData = await fetchRouteFromApi(startSelection, selectedDestination)
-        setShortestPathBlocks(routeData.path_blocks ?? [])
-        setPathInstructions(routeData.path_instructions ?? '')
-      } catch (error) {
-        setShortestPathBlocks([])
-        setPathInstructions('')
-        setRouteError(error instanceof Error ? error.message : 'Unexpected route error.')
-      } finally {
-        setIsRouteLoading(false)
+    const nowMinutes = minutesSinceMidnight(new Date())
+    const currentWindowIndex = PERIOD_SEQUENCE.findIndex((periodNumber) => {
+      const slot = PERIOD_WINDOWS[periodNumber]
+      return slot
+        ? nowMinutes >= slot.start - ARRIVAL_BUFFER_MINUTES && nowMinutes < slot.end
+        : false
+    })
+
+    const nextWindowIndex = PERIOD_SEQUENCE.findIndex((periodNumber) => {
+      const slot = PERIOD_WINDOWS[periodNumber]
+      return slot
+        ? nowMinutes < slot.start - ARRIVAL_BUFFER_MINUTES
+        : false
+    })
+
+    const referenceIndex = currentWindowIndex >= 0
+      ? currentWindowIndex
+      : nextWindowIndex >= 0
+        ? nextWindowIndex - 1
+        : PERIOD_SEQUENCE.length - 1
+
+    setSmartPeriodIndex((currentIndex) => {
+      if (nextMode === 'current') {
+        return currentWindowIndex >= 0 ? currentWindowIndex : null
+      }
+
+      if (nextMode === 'previous') {
+        const newIndex = currentIndex !== null ? currentIndex - 1 : referenceIndex
+        return Math.max(newIndex, -1)
+      }
+
+      const newIndex = currentIndex !== null ? currentIndex + 1 : referenceIndex + 1
+      return Math.min(newIndex, PERIOD_SEQUENCE.length)
+    })
+  }
+
+  const todayCode = getCurrentDayCode()
+
+  const smartDestinationPreview = useMemo(() => {
+    if (!isTimetableLoaded) {
+      return { available: false, message: 'Load timetable to enable smart destination.' }
+    }
+
+    const todayEntries = timetableEntries
+      .filter((entry) => entry.day_of_week === todayCode)
+      .sort((a, b) => Number(a.period_number) - Number(b.period_number))
+
+    if (todayEntries.length === 0) {
+      return { available: false, message: 'No class today.' }
+    }
+
+    const entriesByPeriod = new Map(todayEntries.map((entry) => [Number(entry.period_number), entry]))
+    const nowMinutes = minutesSinceMidnight(new Date())
+    const currentWindowIndex = PERIOD_SEQUENCE.findIndex((periodNumber) => {
+      const slot = PERIOD_WINDOWS[periodNumber]
+      return slot
+        ? nowMinutes >= slot.start - ARRIVAL_BUFFER_MINUTES && nowMinutes < slot.end
+        : false
+    })
+
+    const nextWindowIndex = PERIOD_SEQUENCE.findIndex((periodNumber) => {
+      const slot = PERIOD_WINDOWS[periodNumber]
+      return slot
+        ? nowMinutes < slot.start - ARRIVAL_BUFFER_MINUTES
+        : false
+    })
+
+    const referenceIndex = currentWindowIndex >= 0
+      ? currentWindowIndex
+      : nextWindowIndex >= 0
+        ? nextWindowIndex - 1
+        : PERIOD_SEQUENCE.length - 1
+
+    let targetIndex = null
+    if (smartMode === 'current') {
+      if (currentWindowIndex < 0) {
+        return { available: false, message: 'No class now.' }
+      }
+      targetIndex = smartPeriodIndex ?? currentWindowIndex
+    } else if (smartMode === 'previous') {
+      targetIndex = smartPeriodIndex ?? referenceIndex
+    } else {
+      targetIndex = smartPeriodIndex ?? (referenceIndex + 1)
+    }
+
+    if (targetIndex === null || targetIndex < 0 || targetIndex >= PERIOD_SEQUENCE.length) {
+      const message = smartMode === 'next' ? 'No next class today.' : 'No previous class today.'
+      return { available: false, message }
+    }
+
+    const targetPeriod = PERIOD_SEQUENCE[targetIndex]
+    const pickedEntry = entriesByPeriod.get(targetPeriod) ?? null
+
+    if (!pickedEntry) {
+      return {
+        available: false,
+        message: `${formatPeriodTime(targetPeriod)} · No class now.`,
       }
     }
+
+    const destination = parseDestinationFromEntry(pickedEntry)
+    if (!destination || !SELECTABLE_BLOCK_IDS.has(destination.block)) {
+      return { available: false, message: 'Class location is unavailable on the map.' }
+    }
+
+    return {
+      available: true,
+      destination,
+      entry: pickedEntry,
+      message: `${formatPeriodTime(pickedEntry.period_number)} · ${pickedEntry.course_code || 'Class'} · ${pickedEntry.room_name || 'Room TBD'}${pickedEntry.map_node ? ` (${pickedEntry.map_node})` : ''}`,
+    }
+  }, [clock, isTimetableLoaded, smartMode, smartPeriodIndex, timetableEntries, todayCode])
+
+  const applySmartDestination = async () => {
+    if (!startSelection || selectionPhase === 'select-start') {
+      setRouteError('Confirm start first, then use Smart Destination.')
+      return
+    }
+
+    if (!smartDestinationPreview.available || !smartDestinationPreview.destination) {
+      setRouteError(smartDestinationPreview.message)
+      return
+    }
+
+    const destination = smartDestinationPreview.destination
+    setSelectedBlock(destination.block)
+    setHasClickedBlock(true)
+    setPendingSelection(destination)
+
+    await fetchRouteForSelection(startSelection, destination)
   }
 
   const resetSelectionFlow = () => {
@@ -621,7 +806,6 @@ function App() {
   }, [hasConfirmedRoute, routeNodes, blockById, segmentPathCache])
 
   const shouldRenderPathConnections = hasConfirmedRoute && routeSegments.length > 0
-  const todayCode = getCurrentDayCode()
 
   const todaySchedule = useMemo(() => {
     if (timetableEntries.length === 0) {
@@ -807,7 +991,13 @@ function App() {
             pathInstructions={pathInstructions}
             todaySchedule={todaySchedule}
             todayTimetableLoading={isTimetableLoading}
-            todayTimetableError=''
+            smartMode={smartMode}
+            smartModeOptions={SMART_MODE_OPTIONS}
+            onSmartModeChange={handleSmartModeChange}
+            onSmartDestinationApply={applySmartDestination}
+            smartDestinationMessage={smartDestinationPreview.message}
+            smartDestinationAvailable={smartDestinationPreview.available}
+            smartDestinationDisabled={isRouteLoading || selectionPhase === 'select-start'}
           />
         ) : (
           <TimetablePanel

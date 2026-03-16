@@ -433,6 +433,70 @@
   align-items: center;
 }
 
+.smart-destination {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.smart-destination-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.smart-destination-message {
+  margin: 0;
+  color: var(--text-secondary);
+  font: 600 0.76rem/1.35 var(--mono);
+}
+
+.smart-destination-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.smart-mode-group {
+  display: inline-flex;
+  border: 1px solid var(--chip-border);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--chip-bg);
+}
+
+.smart-mode-chip {
+  border: 0;
+  border-right: 1px solid var(--chip-border);
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--text-primary);
+  font: 700 0.74rem/1 var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.smart-mode-chip:last-child {
+  border-right: 0;
+}
+
+.smart-mode-chip.is-active {
+  background: var(--chip-active-bg);
+  color: var(--text-primary);
+}
+
+.smart-destination-action {
+  min-height: 38px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+}
+
 .selection-output {
   display: inline-flex;
   align-items: center;
@@ -1579,6 +1643,24 @@
   .wizard-actions {
     width: 100%;
     gap: 8px;
+  }
+
+  .smart-destination-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .smart-mode-group {
+    width: 100%;
+  }
+
+  .smart-mode-chip {
+    flex: 1 1 0;
+  }
+
+  .smart-destination-action {
+    width: 100%;
   }
 
   .wizard-actions .primary-action,

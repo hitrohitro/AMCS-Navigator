@@ -58,6 +58,17 @@ export const PERIOD_TIMES = {
   8: '4:20 – 5:10',
 }
 
+export const PERIOD_WINDOWS = {
+  1: { start: 8 * 60 + 30, end: 9 * 60 + 20 },
+  2: { start: 9 * 60 + 20, end: 10 * 60 + 10 },
+  3: { start: 10 * 60 + 30, end: 11 * 60 + 20 },
+  4: { start: 11 * 60 + 20, end: 12 * 60 + 10 },
+  5: { start: 13 * 60 + 40, end: 14 * 60 + 30 },
+  6: { start: 14 * 60 + 30, end: 15 * 60 + 20 },
+  7: { start: 15 * 60 + 30, end: 16 * 60 + 20 },
+  8: { start: 16 * 60 + 20, end: 17 * 60 + 10 },
+}
+
 export function formatPeriodTime(periodNumber) {
   const time = PERIOD_TIMES[periodNumber]
   return time ? `Period ${periodNumber} · ${time}` : `Period ${periodNumber}`

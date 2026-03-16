@@ -47,6 +47,13 @@ function OverviewPanel({
   pathInstructions,
   todaySchedule,
   todayTimetableLoading,
+  smartMode,
+  smartModeOptions,
+  onSmartModeChange,
+  onSmartDestinationApply,
+  smartDestinationMessage,
+  smartDestinationAvailable,
+  smartDestinationDisabled,
 }) {
   return (
     <>
@@ -104,6 +111,35 @@ function OverviewPanel({
             >
               Reset selection
             </button>
+          </div>
+
+          <div className="smart-destination" aria-label="Smart destination">
+            <div className="smart-destination-head">
+              <span className="meta-label">Smart destination</span>
+              <p className="smart-destination-message">{smartDestinationMessage}</p>
+            </div>
+            <div className="smart-destination-controls">
+              <div className="smart-mode-group" role="group" aria-label="Choose timetable window">
+                {smartModeOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`smart-mode-chip ${smartMode === option.value ? 'is-active' : ''}`}
+                    onClick={() => onSmartModeChange(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="secondary-action smart-destination-action"
+                onClick={onSmartDestinationApply}
+                disabled={smartDestinationDisabled || !smartDestinationAvailable}
+              >
+                Set destination
+              </button>
+            </div>
           </div>
         </div>
 
@@ -230,11 +266,11 @@ function OverviewPanel({
                 </span>
                 <span className="legend-item">
                   <i className="legend-dot accent"></i>
-                  Academic blocks
+                  Main blocks
                 </span>
                 <span className="legend-item">
                   <i className="legend-dot neutral"></i>
-                  Support blocks
+                  Other blocks
                 </span>
                 <span className="legend-item is-highlight">
                   <i className="legend-dot selected"></i>
