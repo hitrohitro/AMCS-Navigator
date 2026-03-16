@@ -46,3 +46,19 @@ export function formatTime(date) {
     second: '2-digit',
   })
 }
+
+export const PERIOD_TIMES = {
+  1: '8:30 – 9:20',
+  2: '9:20 – 10:10',
+  3: '10:30 – 11:20',
+  4: '11:20 – 12:10',
+  5: '1:40 – 2:30',
+  6: '2:30 – 3:20',
+  7: '3:30 – 4:20',
+  8: '4:20 – 5:10',
+}
+
+export function formatPeriodTime(periodNumber) {
+  const time = PERIOD_TIMES[periodNumber]
+  return time ? `Period ${periodNumber} · ${time}` : `Period ${periodNumber}`
+}

@@ -1,3 +1,5 @@
+import { PERIOD_TIMES, formatPeriodTime } from '../lib/routeRuntime'
+
 const DAY_SEQUENCE = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
 const DAY_LABEL = {
   MON: 'Monday',
@@ -8,6 +10,9 @@ const DAY_LABEL = {
   SAT: 'Saturday',
   SUN: 'Sunday',
 }
+const PERIOD_SEQUENCE = Object.keys(PERIOD_TIMES)
+  .map(Number)
+  .sort((a, b) => a - b)
 
 function formatRoom(entry) {
   if (!entry.room_name) {
@@ -33,7 +38,29 @@ function TimetablePanel({
     .map((dayCode) => ({
       dayCode,
       dayLabel: DAY_LABEL[dayCode],
-      items: timetableEntries.filter((entry) => entry.day_of_week === dayCode),
+      items: (() => {
+        const dayEntries = timetableEntries.filter((entry) => entry.day_of_week === dayCode)
+        if (dayEntries.length === 0) {
+          return []
+        }
+
+        const entriesByPeriod = new Map(dayEntries.map((entry) => [Number(entry.period_number), entry]))
+        return PERIOD_SEQUENCE.map((periodNumber) => {
+          const entry = entriesByPeriod.get(periodNumber)
+          if (!entry) {
+            return {
+              id: `free-${dayCode}-${periodNumber}`,
+              period_number: periodNumber,
+              is_free: true,
+            }
+          }
+
+          return {
+            ...entry,
+            is_free: false,
+          }
+        })
+      })(),
     }))
     .filter((dayGroup) => dayGroup.items.length > 0)
 
@@ -64,15 +91,15 @@ function TimetablePanel({
               <article key={dayGroup.dayCode} className="day-card">
                 <header>
                   <h3>{dayGroup.dayLabel}</h3>
-                  <span>{dayGroup.items.length} sessions</span>
+                  <span>{dayGroup.items.filter((item) => !item.is_free).length} sessions</span>
                 </header>
                 <div className="session-list">
                   {dayGroup.items.map((item) => (
-                    <div key={item.id} className="session-card">
-                      <p className="session-time">Period {item.period_number}</p>
-                      <strong>{item.course_code || 'Course pending'}</strong>
-                      <p>{formatRoom(item)}</p>
-                      <span>{item.programme || 'Programme not set'}</span>
+                    <div key={item.id} className={`session-card ${item.is_free ? 'is-free' : ''}`}>
+                      <p className="session-time">{formatPeriodTime(item.period_number)}</p>
+                      <strong>{item.is_free ? 'Free period' : (item.course_code || 'Course pending')}</strong>
+                      <p>{item.is_free ? 'No class scheduled' : formatRoom(item)}</p>
+                      <span>{item.is_free ? 'Available' : (item.programme || 'Programme not set')}</span>
                     </div>
                   ))}
                 </div>

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import './App.css'
 import { SEGMENT_PATH_CACHE } from './data/lineGeometryStore'
 import OverviewPanel from './components/OverviewPanel'
@@ -13,7 +14,7 @@ import {
   fetchTimetableFromApi,
   fetchTimetableOptions,
 } from './lib/api'
-import { edgeKey, formatTime, parseRouteNodes } from './lib/routeRuntime'
+import { PERIOD_TIMES, edgeKey, formatPeriodTime, formatTime, parseRouteNodes } from './lib/routeRuntime'
 
 const BRIDGE_EDGE_SET = new Set(
   horizontalBridges.map(([a, b]) => edgeKey(a, b)),
@@ -36,6 +37,10 @@ const DAY_LABEL_BY_CODE = {
   SAT: 'Saturday',
   SUN: 'Sunday',
 }
+const PERIOD_SEQUENCE = Object.keys(PERIOD_TIMES)
+  .map(Number)
+  .sort((a, b) => a - b)
+
 function programmeShortLabel(programmeName) {
   const normalized = String(programmeName || '')
     .toUpperCase()
@@ -80,21 +85,41 @@ function FilterDropdown({
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
+  const triggerRef = useRef(null)
+  const menuRef = useRef(null)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, width: 0 })
+
+  const updatePosition = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      setMenuPosition({ top: rect.bottom + 8, left: rect.left, width: rect.width })
+    }
+  }, [])
 
   useEffect(() => {
     if (!isOpen) {
       return undefined
     }
 
+    updatePosition()
+
     const handlePointerDown = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      const insideContainer = containerRef.current?.contains(event.target)
+      const insideMenu = menuRef.current?.contains(event.target)
+      if (!insideContainer && !insideMenu) {
         setIsOpen(false)
       }
     }
 
     window.addEventListener('pointerdown', handlePointerDown)
-    return () => window.removeEventListener('pointerdown', handlePointerDown)
-  }, [isOpen])
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [isOpen, updatePosition])
 
   const selectedOption = options.find((option) => option.value === value)
   const displayLabel = selectedOption?.label ?? placeholder
@@ -112,6 +137,7 @@ function FilterDropdown({
         className={`timetable-select-shell ${isOpen ? 'is-open' : ''} ${disabled ? 'is-disabled' : ''}`}
       >
         <button
+          ref={triggerRef}
           type="button"
           className="timetable-select-trigger"
           disabled={disabled}
@@ -124,27 +150,36 @@ function FilterDropdown({
           <span className="timetable-select-caret" aria-hidden="true">⌄</span>
         </button>
 
-        {isOpen && !disabled ? (
-          <div className="timetable-select-menu" role="listbox" aria-label={`${label} options`}>
-            <button
-              type="button"
-              className={`timetable-select-option ${value === '' ? 'is-selected' : ''}`}
-              onClick={() => handlePick('')}
-            >
-              {placeholder}
-            </button>
-            {options.map((option) => (
-              <button
-                key={`${label}-${option.value}`}
-                type="button"
-                className={`timetable-select-option ${value === option.value ? 'is-selected' : ''}`}
-                onClick={() => handlePick(option.value)}
+        {isOpen && !disabled
+          ? createPortal(
+              <div
+                ref={menuRef}
+                className="timetable-select-menu"
+                role="listbox"
+                aria-label={`${label} options`}
+                style={{ position: 'fixed', top: menuPosition.top, left: menuPosition.left, width: menuPosition.width }}
               >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        ) : null}
+                <button
+                  type="button"
+                  className={`timetable-select-option ${value === '' ? 'is-selected' : ''}`}
+                  onClick={() => handlePick('')}
+                >
+                  {placeholder}
+                </button>
+                {options.map((option) => (
+                  <button
+                    key={`${label}-${option.value}`}
+                    type="button"
+                    className={`timetable-select-option ${value === option.value ? 'is-selected' : ''}`}
+                    onClick={() => handlePick(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>,
+              document.body,
+            )
+          : null}
       </div>
     </label>
   )
@@ -260,8 +295,7 @@ function App() {
     active_semester: null,
   })
   const [timetableFilters, setTimetableFilters] = useState({
-    academicYear: '',
-    term: '',
+    semesterId: '',
     programme: '',
   })
   const [timetableSummary, setTimetableSummary] = useState({
@@ -271,6 +305,7 @@ function App() {
   const [timetableEntries, setTimetableEntries] = useState([])
   const [timetableError, setTimetableError] = useState('')
   const [isTimetableLoading, setIsTimetableLoading] = useState(false)
+  const programmeRequestRef = useRef(null)
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -292,7 +327,7 @@ function App() {
       return
     }
 
-    if (!filters.academicYear || !filters.term) {
+    if (!filters.semesterId) {
       setTimetableEntries([])
       setTimetableError('Select a semester after choosing programme.')
       return
@@ -349,34 +384,24 @@ function App() {
 
   const handleSemesterChange = (value) => {
     if (!value) {
-      setTimetableFilters((current) => ({
-        ...current,
-        academicYear: '',
-        term: '',
-      }))
+      setTimetableFilters((current) => ({ ...current, semesterId: '' }))
       return
     }
 
-    const [academicYear, term] = value.split('|')
-
-    setTimetableFilters((current) => ({
-      ...current,
-      academicYear,
-      term,
-    }))
+    setTimetableFilters((current) => ({ ...current, semesterId: value }))
     setTimetableError('')
   }
 
   const handleProgrammeChange = async (programme) => {
+  programmeRequestRef.current = programme
 
-    setTimetableEntries([])
+  setTimetableEntries([])
     setTimetableSummary({ academicYear: '', term: '' })
 
     if (!programme) {
       setTimetableFilters({
         programme: '',
-        academicYear: '',
-        term: '',
+        semesterId: '',
       })
       setTimetableOptions((current) => ({
         ...current,
@@ -393,6 +418,10 @@ function App() {
       const refreshedOptions = await fetchTimetableOptions({ programme })
       const semester = refreshedOptions.active_semester ?? refreshedOptions.semesters?.[0] ?? null
 
+      if (programmeRequestRef.current !== programme) {
+        return
+      }
+
       setTimetableOptions((current) => ({
         ...current,
         semesters: refreshedOptions.semesters ?? [],
@@ -401,15 +430,13 @@ function App() {
 
       setTimetableFilters({
         programme,
-        academicYear: semester?.academic_year ?? '',
-        term: semester?.term ?? '',
+        semesterId: semester ? String(semester.id) : '',
       })
       setTimetableError('')
     } catch (error) {
       setTimetableFilters({
         programme,
-        academicYear: '',
-        term: '',
+        semesterId: '',
       })
       setTimetableOptions((current) => ({
         ...current,
@@ -597,30 +624,45 @@ function App() {
   const todayCode = getCurrentDayCode()
 
   const todaySchedule = useMemo(() => {
-    const todayEntries = timetableEntries.filter((entry) => entry.day_of_week === todayCode)
-
-    if (todayEntries.length === 0) {
+    if (timetableEntries.length === 0) {
       return null
     }
 
+    const todayEntries = timetableEntries.filter((entry) => entry.day_of_week === todayCode)
+    const entriesByPeriod = new Map(todayEntries.map((entry) => [Number(entry.period_number), entry]))
+
     return {
       day: DAY_LABEL_BY_CODE[todayCode],
-      items: todayEntries.map((entry) => ({
-        time: `Period ${entry.period_number}`,
-        subject: entry.course_code || 'Course pending',
-        room: entry.room_name
-          ? entry.map_node
-            ? `${entry.room_name} (${entry.map_node})`
-            : entry.room_name
-          : 'Room not assigned',
-        faculty: entry.programme || 'Programme not set',
-      })),
+      items: PERIOD_SEQUENCE.map((periodNumber) => {
+        const entry = entriesByPeriod.get(periodNumber)
+        if (!entry) {
+          return {
+            key: `free-${periodNumber}`,
+            time: formatPeriodTime(periodNumber),
+            subject: 'Free period',
+            room: 'No class scheduled',
+            faculty: 'Available',
+            isFree: true,
+          }
+        }
+
+        return {
+          key: String(entry.id ?? `entry-${periodNumber}`),
+          time: formatPeriodTime(entry.period_number),
+          subject: entry.course_code || 'Course pending',
+          room: entry.room_name
+            ? entry.map_node
+              ? `${entry.room_name} (${entry.map_node})`
+              : entry.room_name
+            : 'Room not assigned',
+          faculty: entry.programme || 'Programme not set',
+          isFree: false,
+        }
+      }),
     }
   }, [timetableEntries, todayCode])
 
-  const selectedSemesterValue = timetableFilters.academicYear && timetableFilters.term
-    ? `${timetableFilters.academicYear}|${timetableFilters.term}`
-    : ''
+  const selectedSemesterValue = timetableFilters.semesterId
 
   const programmeOptions = timetableOptions.programmes.map((programme) => ({
     value: programme,
@@ -628,21 +670,25 @@ function App() {
   }))
 
   const semesterOptions = timetableOptions.semesters.map((semester) => ({
-    value: `${semester.academic_year}|${semester.term}`,
-    label: semester.semester_label ?? `${semester.academic_year} ${semester.term}`,
+    value: String(semester.id),
+    label: semester.semester_number
+      ? `Semester ${semester.semester_number} \u00b7 ${semester.academic_year} ${semester.term}`
+      : `${semester.academic_year} ${semester.term}`,
   }))
 
-  const selectedSemesterLabel = timetableSummary.academicYear && timetableSummary.term
-    ? `${timetableSummary.academicYear} (${timetableSummary.term})`
-    : timetableFilters.academicYear && timetableFilters.term
-      ? `${timetableFilters.academicYear} (${timetableFilters.term})`
-      : 'No semester selected'
-
   const selectedSemesterOption = timetableOptions.semesters.find(
-    (semester) => semester.academic_year === timetableFilters.academicYear && semester.term === timetableFilters.term,
+    (semester) => String(semester.id) === timetableFilters.semesterId,
   )
 
-  const selectedSemesterNumberLabel = selectedSemesterOption?.semester_label ?? ''
+  const selectedSemesterLabel = selectedSemesterOption
+    ? `${selectedSemesterOption.academic_year} (${selectedSemesterOption.term})`
+    : timetableSummary.academicYear && timetableSummary.term
+      ? `${timetableSummary.academicYear} (${timetableSummary.term})`
+      : 'No semester selected'
+
+  const selectedSemesterNumberLabel = selectedSemesterOption?.semester_number
+    ? `Semester ${selectedSemesterOption.semester_number}`
+    : (selectedSemesterOption?.semester_label ?? '')
 
   return (
     <div className="app-shell">
@@ -718,8 +764,7 @@ function App() {
               disabled={
                 isTimetableLoading ||
                 !timetableFilters.programme ||
-                !timetableFilters.academicYear ||
-                !timetableFilters.term
+                !timetableFilters.semesterId
               }
             >
               {isTimetableLoading ? 'Loading...' : 'Load timetable'}
@@ -762,7 +807,7 @@ function App() {
             pathInstructions={pathInstructions}
             todaySchedule={todaySchedule}
             todayTimetableLoading={isTimetableLoading}
-            todayTimetableError={timetableError}
+            todayTimetableError=''
           />
         ) : (
           <TimetablePanel

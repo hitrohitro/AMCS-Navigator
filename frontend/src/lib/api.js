@@ -26,11 +26,6 @@ export async function fetchTimetableOptions(filters = {}) {
     params.set('programme', filters.programme)
   }
 
-  if (filters.academicYear && filters.term) {
-    params.set('academic_year', filters.academicYear)
-    params.set('term', filters.term)
-  }
-
   const query = params.toString()
   const endpoint = query
     ? `${API_BASE_URL}/api/timetable/options?${query}`
@@ -49,7 +44,9 @@ export async function fetchTimetableOptions(filters = {}) {
 export async function fetchTimetableFromApi(filters = {}) {
   const params = new URLSearchParams()
 
-  if (filters.academicYear && filters.term) {
+  if (filters.semesterId) {
+    params.set('semester_id', filters.semesterId)
+  } else if (filters.academicYear && filters.term) {
     params.set('academic_year', filters.academicYear)
     params.set('term', filters.term)
   }

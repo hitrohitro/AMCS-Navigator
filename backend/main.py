@@ -64,7 +64,7 @@ def _load_semesters() -> list[dict]:
 	return supabase_get(
 		'semesters',
 		{
-			'select': 'id,academic_year,term,is_active',
+			'select': 'id,academic_year,term,is_active,semester_number',
 			'order': 'academic_year.asc,term.asc',
 		},
 	)
@@ -121,14 +121,16 @@ def _build_semester_options(
 
 	semester_options: list[SemesterOption] = []
 	for index, semester in enumerate(filtered, start=1):
+		db_sem_num = semester.get('semester_number')
+		sem_num = int(db_sem_num) if db_sem_num is not None else index
 		semester_options.append(
 			SemesterOption(
 				id=int(semester['id']),
 				academic_year=str(semester['academic_year']),
 				term=str(semester['term']).upper(),
 				is_active=bool(semester.get('is_active')),
-				semester_number=index,
-				semester_label=_ordinal(index),
+				semester_number=sem_num,
+				semester_label=_ordinal(sem_num),
 			)
 		)
 
@@ -280,13 +282,22 @@ def get_timetable_options(
 
 @app.get('/api/timetable', response_model=TimetableResponse)
 def get_timetable(
+	semester_id: int | None = Query(default=None),
 	academic_year: str | None = Query(default=None),
 	term: str | None = Query(default=None),
 	programme: str | None = Query(default=None),
 	day_of_week: str | None = Query(default=None),
 ) -> TimetableResponse:
 	semesters = _load_semesters()
-	selected_semester = _pick_semester(semesters, academic_year, term)
+	if semester_id is not None:
+		selected_semester = next(
+			(s for s in semesters if int(s['id']) == semester_id),
+			None,
+		)
+		if not selected_semester:
+			raise HTTPException(status_code=404, detail='Semester not found.')
+	else:
+		selected_semester = _pick_semester(semesters, academic_year, term)
 	normalized_programme = programme.strip() if programme else None
 	normalized_day = _normalize_day(day_of_week) if day_of_week else None
 
