@@ -793,6 +793,8 @@
   box-shadow:
     0 0 0 3px rgba(245, 210, 105, 0.16),
     0 12px 24px rgba(7, 20, 28, 0.24);
+  min-width: 44px;
+  min-height: 30px;
 }
 
 .map-landmark[data-landmark-id='main-gate']::before,
@@ -804,7 +806,7 @@
 
 .map-landmark[data-landmark-id='rear-gate'] {
   z-index: 3;
-  flex-direction: column;
+  flex-direction: row;
   gap: 4px;
   justify-content: center;
   padding: 6px;
@@ -820,12 +822,15 @@
   box-shadow:
     0 0 0 3px rgba(245, 210, 105, 0.16),
     0 12px 24px rgba(7, 20, 28, 0.24);
+  min-width: 30px;
+  min-height: 44px;
 }
 
 .map-landmark[data-landmark-id='rear-gate']::before,
 .map-landmark[data-landmark-id='rear-gate']::after {
-  top: 12%;
-  bottom: 12%;
+  top: 10%;
+  bottom: 10%;
+  height: auto;
   width: 10px;
 }
 
@@ -1746,8 +1751,8 @@
   }
 
   .map-landmark[data-landmark-id='rear-gate'] {
-    min-width: 42px;
-    min-height: 48px;
+    min-width: 30px;
+    min-height: 44px;
     padding: 6px;
     transform: translate(-58%, -50%);
   }
@@ -1757,7 +1762,7 @@
     min-width: 34px;
     min-height: 34px;
     padding: 3px;
-    transform: translate(-108%, -50%);
+    transform: translate(-135%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area'] .landmark-badge {
@@ -1854,19 +1859,21 @@
   }
 
   .map-landmark[data-landmark-id='rear-gate'] {
-    min-width: 40px;
-    min-height: 46px;
+    min-width: 30px;
+    min-height: 44px;
     padding: 5px;
-    transform: translate(-62%, -50%);
-  }
-
-  .map-landmark[data-landmark-id='parking-area']::after {
-    width: 24px;
-    height: 24px;
+    transform: translate(-58%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area'] {
-    transform: translate(-118%, -50%);
+    transform: translate(-140%, -50%);
+  }
+
+  .map-landmark {
+    padding: 4px 8px;
+    border-radius: 14px;
+    font: 700 0.5rem/1.1 var(--mono);
+    letter-spacing: 0.04em;
   }
 
   .map-landmark[data-landmark-id='parking-area'] .landmark-badge {
