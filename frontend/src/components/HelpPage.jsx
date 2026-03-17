@@ -168,6 +168,21 @@ export default function HelpPage({ onClose }) {
             </tbody>
           </table>
         </section>
+
+        <div className="help-repo-link-wrap">
+          <a
+            className="help-repo-link"
+            href="https://github.com/hitrohitro/AMCS-Navigator"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Open AMCS Navigator GitHub repository"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 2.25a9.75 9.75 0 0 0-3.083 19.002c.487.09.665-.21.665-.467v-1.64c-2.705.588-3.276-1.145-3.276-1.145a2.58 2.58 0 0 0-1.08-1.425c-.882-.603.067-.591.067-.591a2.043 2.043 0 0 1 1.49 1.004 2.072 2.072 0 0 0 2.833.808 2.08 2.08 0 0 1 .618-1.302c-2.16-.246-4.433-1.08-4.433-4.807a3.766 3.766 0 0 1 1.004-2.613 3.5 3.5 0 0 1 .096-2.576s.819-.262 2.684.998a9.26 9.26 0 0 1 4.886 0c1.865-1.26 2.683-.998 2.683-.998a3.5 3.5 0 0 1 .097 2.576 3.757 3.757 0 0 1 1.003 2.613c0 3.736-2.276 4.558-4.442 4.8a2.33 2.33 0 0 1 .662 1.807v2.677c0 .26.176.562.672.466A9.75 9.75 0 0 0 12 2.25Z" />
+            </svg>
+            <span>View Project on GitHub</span>
+          </a>
+        </div>
       </div>
     </div>
   )

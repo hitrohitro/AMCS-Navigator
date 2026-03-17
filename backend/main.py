@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import APP_TITLE, APP_VERSION, CORS_ORIGINS
+from fastapi.middleware.gzip import GZipMiddleware
+from app.config import APP_TITLE, APP_VERSION, CORS_ORIGINS, CORS_ORIGIN_REGEX
 from app.navigation import (
 	bfs_shortest_path,
 	build_path_instructions,
@@ -160,10 +161,13 @@ def _pick_semester(semesters: list[dict], academic_year: str | None, term: str |
 app.add_middleware(
 	CORSMiddleware,
 	allow_origins=CORS_ORIGINS,
+	allow_origin_regex=CORS_ORIGIN_REGEX,
 	allow_credentials=True,
 	allow_methods=['*'],
 	allow_headers=['*'],
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 @app.get('/health')

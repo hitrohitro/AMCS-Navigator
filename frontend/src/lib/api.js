@@ -1,5 +1,10 @@
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? 'http://localhost:8000'
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
+
+export const API_BASE_URL = rawBaseUrl
+  ? rawBaseUrl.replace(/\/$/, '')
+  : import.meta.env.DEV
+    ? 'http://localhost:8000'
+    : window.location.origin
 
 export async function fetchRouteFromApi(sourceSelection, destinationSelection) {
   const params = new URLSearchParams({

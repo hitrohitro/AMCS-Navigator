@@ -84,3 +84,42 @@ http://localhost:5173
 - The frontend and backend are developed as separate modules for easier maintenance.
 - Map landmark and block definitions are managed in frontend data files.
 - Timetable and routing behavior depends on backend API availability.
+
+## Deployment
+
+### Render (Backend)
+
+This repository now includes [render.yaml](render.yaml) for backend deployment.
+
+1. Create a new Blueprint service in Render from this repository.
+2. Render will detect the backend web service configuration automatically.
+3. Set environment variables in Render:
+   - SUPABASE_URL
+   - SUPABASE_KEY
+   - CORS_ORIGINS
+     Example: https://your-frontend.vercel.app,https://your-preview.vercel.app
+   - CORS_ORIGIN_REGEX
+     Default already included for Vercel preview domains.
+
+Backend health endpoint:
+
+- /health
+
+### Vercel (Frontend)
+
+This repository now includes [frontend/vercel.json](frontend/vercel.json) with:
+
+- SPA rewrite to index.html
+- static asset cache headers
+
+1. Import this repository in Vercel.
+2. Set project root to frontend.
+3. Build command: npm run build
+4. Output directory: dist
+5. Set environment variable:
+   - VITE_API_BASE_URL=https://your-render-backend.onrender.com
+
+If VITE_API_BASE_URL is not set:
+
+- local dev uses http://localhost:8000
+- production falls back to same-origin.

@@ -1,0 +1,27 @@
+# Global OS / editor artifacts
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python caches and envs
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/venv/
+**/.venv/
+
+# Node artifacts
+**/node_modules/
+**/dist/
+**/dist-ssr/
+
+# Environment files (keep examples)
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs
+**/*.log
