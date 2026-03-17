@@ -1762,7 +1762,7 @@
     min-width: 34px;
     min-height: 34px;
     padding: 3px;
-    transform: translate(-135%, -50%);
+    transform: translate(-125%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area'] .landmark-badge {
@@ -1866,7 +1866,7 @@
   }
 
   .map-landmark[data-landmark-id='parking-area'] {
-    transform: translate(-140%, -50%);
+    transform: translate(-130%, -50%);
   }
 
   .map-landmark {
@@ -2001,9 +2001,9 @@
     grid-template-rows: repeat(11, minmax(0, 1fr));
     gap: 7px;
     padding: 10px;
-    min-height: 318px;
+    min-height: 280px;
     max-height: none;
-    aspect-ratio: 16 / 11;
+    aspect-ratio: 16 / 10;
   }
 
   .path-text {
@@ -2038,6 +2038,27 @@
     min-height: 34px;
     display: inline-flex;
     align-items: center;
+  }
+
+  .route-guide-card {
+    padding: 12px;
+    width: 100%;
+  }
+
+  .route-guide-strip {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .route-guide-meta {
+    font-size: 0.7rem;
+    margin-bottom: 8px;
+  }
+
+  .route-guide-text {
+    font-size: 0.74rem;
+    line-height: 1.4;
+    word-break: break-word;
   }
 
   .session-card {
@@ -2252,8 +2273,8 @@
   .campus-map {
     gap: 5px;
     padding: 8px;
-    min-height: 286px;
-    aspect-ratio: 16 / 12;
+    min-height: 240px;
+    aspect-ratio: 16 / 10;
   }
 
   .map-legend {
@@ -2281,6 +2302,14 @@
   .route-guide-meta,
   .route-guide-text {
     font-size: 0.7rem;
+  }
+
+  .route-guide-strip {
+    gap: 5px;
+  }
+
+  .route-guide-card {
+    padding: 10px;
   }
 
   .day-card {
