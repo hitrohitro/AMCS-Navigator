@@ -242,6 +242,7 @@ function OverviewPanel({
                   <button
                     key={block.id}
                     type="button"
+                    data-block-id={block.id}
                     className={`map-block tone-${block.tone} ${selectedBlock === block.id ? 'is-selected' : ''} ${isOnPath ? 'is-on-path' : ''} ${isStart ? 'is-start' : ''} ${isDestination ? 'is-destination' : ''} ${isInteractiveBlock ? '' : 'is-static'}`}
                     style={{
                       gridRow: `${block.row} / span ${block.height}`,
