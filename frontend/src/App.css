@@ -1759,10 +1759,10 @@
 
   .map-landmark[data-landmark-id='parking-area'] {
     position: relative;
-    min-width: 34px;
-    min-height: 34px;
+    min-width: 32px;
+    min-height: 32px;
     padding: 3px;
-    transform: translate(-125%, -50%);
+    transform: translate(-120%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area'] .landmark-badge {
@@ -1866,7 +1866,9 @@
   }
 
   .map-landmark[data-landmark-id='parking-area'] {
-    transform: translate(-130%, -50%);
+    min-width: 30px;
+    min-height: 30px;
+    transform: translate(-126%, -50%);
   }
 
   .map-landmark {

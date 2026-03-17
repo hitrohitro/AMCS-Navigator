@@ -249,6 +249,7 @@ function OverviewPanel({
                       ...(['F', 'T'].includes(block.id) ? { marginTop: '18px' } : {}),
                       ...(block.id === 'H' ? { marginTop: '18px', marginBottom: '-10px' } : {}),
                       ...(block.id === 'G' ? { marginTop: '12px' } : {}),
+                      ...(block.id === 'J' ? { marginTop: '6px' } : {}),
                       ...(block.id === 'H' || block.id === 'T' ? { marginRight: '10px' } : {}),
                     }}
                     onClick={() => handleBlockClick(block.id)}
