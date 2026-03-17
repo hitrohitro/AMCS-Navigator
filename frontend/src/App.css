@@ -1526,18 +1526,60 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .top-nav .nav-chip--ext {
+    display: none !important;
+  }
+}
+
 @media (max-width: 860px) {
+  .nav-chip--ext {
+    display: none;
+  }
+
   .map-frame {
     flex-direction: column;
+    gap: 12px;
   }
 
   .map-sidebar {
-    width: 100%;
+    width: min(100%, 680px);
+    margin-inline: auto;
   }
 
   .map-legend-card {
     width: 100%;
     align-self: stretch;
+  }
+
+  .map-main {
+    width: min(100%, 680px);
+    margin-inline: auto;
+    align-items: center;
+  }
+
+  .map-panel {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .selection-wizard {
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 18px;
+  }
+
+  .campus-map,
+  .path-strip,
+  .path-text {
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .legend-pill {
+    white-space: normal;
+    text-wrap: balance;
   }
 
   .map-landmark[data-landmark-id='rear-gate']::after {
@@ -1589,7 +1631,7 @@
 
 @media (max-width: 720px) {
   .app-shell {
-    padding: 14px 16px calc(92px + env(safe-area-inset-bottom)); /* room for fixed bottom-bar */
+    padding: calc(12px + env(safe-area-inset-top)) 14px calc(92px + env(safe-area-inset-bottom)); /* room for fixed bottom-bar */
     gap: 16px;
   }
 
@@ -1608,12 +1650,32 @@
   }
 
   .hero-copy {
-    padding: 18px 4px 6px;
+    padding: 14px 2px 4px;
+    gap: 12px;
   }
 
   .top-nav {
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: stretch;
     width: 100%;
+    gap: 8px;
+  }
+
+  .nav-chip--help {
+    grid-column: 1;
+    min-height: 44px;
+    width: 44px;
+    padding: 0;
+    justify-self: start;
+  }
+
+  .nav-chip--theme {
+    grid-column: 2;
+  }
+
+  .top-nav .nav-chip:not(.nav-chip--help):not(.nav-chip--theme) {
+    grid-column: 1 / -1;
   }
 
   .map-landmark[data-landmark-id='rear-gate']::after {
@@ -1645,20 +1707,43 @@
 
   .nav-chip {
     text-align: center;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .nav-chip--theme {
-    margin-left: auto;
-    flex: 0 0 auto;
     min-height: 40px;
-    padding: 8px 12px;
-    font-size: 0.68rem;
+    padding: 8px 10px;
+    font-size: 0.66rem;
     letter-spacing: 0.06em;
+  }
+
+  .hero-meta {
+    gap: 8px;
+  }
+
+  .hero-meta > div {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 10px;
+  }
+
+  .hero-meta strong {
+    font-size: 0.96rem;
   }
 
   .section-heading {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .section-heading h2 {
+    margin: 0;
+    font-size: clamp(1.02rem, 4.3vw, 1.2rem);
+    line-height: 1.25;
   }
 
   .timetable-toolbar {
@@ -1668,6 +1753,7 @@
   .timetable-select-trigger,
   .timetable-load-button {
     width: 100%;
+    min-height: 48px;
   }
 
   .wizard-actions {
@@ -1715,7 +1801,12 @@
     grid-template-rows: repeat(11, minmax(0, 1fr));
     gap: 6px;
     padding: 10px;
-    min-height: 250px;
+    min-height: 270px;
+  }
+
+  .path-text {
+    line-height: 1.5;
+    font-size: 0.86rem;
   }
 
   .path-strip {
@@ -1789,11 +1880,35 @@
   .map-frame {
     overflow: visible;
     flex-direction: column;
+    gap: 10px;
+  }
+
+  .map-main,
+  .map-sidebar {
+    width: 100%;
   }
 
   .map-legend-card {
     width: 100%;
     align-self: stretch;
+  }
+
+  .map-panel {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .selection-wizard {
+    margin-bottom: 12px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .campus-map,
+  .path-strip,
+  .path-text {
+    max-width: 520px;
+    margin-inline: auto;
   }
 
   .route-guide-card {
@@ -1815,19 +1930,19 @@
 
   .info-panel,
   .timetable-panel {
-    padding: 18px;
+    padding: 14px;
   }
 
   .map-panel,
   .today-timetable {
-    padding: 18px;
-    border-radius: 24px;
+    padding: 14px;
+    border-radius: 20px;
   }
 }
 
 @media (max-width: 390px) {
   .app-shell {
-    padding: 10px 12px calc(96px + env(safe-area-inset-bottom));
+    padding: calc(8px + env(safe-area-inset-top)) 10px calc(96px + env(safe-area-inset-bottom));
     gap: 12px;
   }
 
@@ -1837,7 +1952,7 @@
   }
 
   .hero-copy {
-    padding: 14px 2px 4px;
+    padding: 12px 0 2px;
     gap: 8px;
   }
 
@@ -1850,8 +1965,25 @@
   }
 
   .hero-meta > div {
-    min-width: 116px;
+    min-width: 0;
     padding: 8px 10px;
+  }
+
+  .top-nav {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .nav-chip--help {
+    min-height: 40px;
+    width: 40px;
+  }
+
+  .nav-chip {
+    min-height: 40px;
+    font-size: 0.63rem;
+    letter-spacing: 0.05em;
+    padding: 7px 8px;
   }
 
   .selection-wizard,
@@ -1882,7 +2014,8 @@
   .campus-map {
     gap: 5px;
     padding: 8px;
-    min-height: 220px;
+    min-height: 245px;
+    aspect-ratio: 15 / 11;
   }
 
   .map-block {
@@ -1920,7 +2053,7 @@
 
   .map-panel,
   .today-timetable {
-    padding: 14px;
+    padding: 12px;
     border-radius: 18px;
   }
 
