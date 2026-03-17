@@ -895,18 +895,10 @@ function App() {
           </button>
           <button
             type="button"
-            className="nav-chip nav-chip--theme"
-            onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
-            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-          >
-            {theme === 'dark' ? 'Light Theme' : 'Dark Theme'}
-          </button>
-          <button
-            type="button"
-            className={`nav-chip ${activeView === 'timetable' ? 'is-active' : ''}`}
+            className={`nav-chip nav-chip--timetable ${activeView === 'timetable' ? 'is-active' : ''}`}
             onClick={() => setActiveView((current) => (current === 'overview' ? 'timetable' : 'overview'))}
           >
-            {activeView === 'overview' ? 'Show timetable' : 'Show map'}
+            {activeView === 'overview' ? 'Timetable' : 'Map'}
           </button>
           {externalLinks.map((link) => (
             <a
@@ -919,6 +911,23 @@ function App() {
               {link.label}
             </a>
           ))}
+          <label className="theme-toggle" title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}>
+            <input
+              type="checkbox"
+              className="theme-toggle__input"
+              checked={theme === 'dark'}
+              onChange={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            />
+            <span className="theme-switch" aria-hidden="true">
+              <span className={`theme-switch__track ${theme === 'dark' ? 'is-dark' : ''}`}>
+                <span className="theme-switch__thumb" />
+              </span>
+              <span className={`theme-switch__state ${theme === 'dark' ? 'is-dark' : 'is-light'}`}>
+                {theme === 'dark' ? 'Dark' : 'Light'}
+              </span>
+            </span>
+          </label>
         </nav>
 
         <div className="hero-copy">

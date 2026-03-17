@@ -1,33 +1,46 @@
 .help-page {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   width: 100%;
-  height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100svh;
+  background:
+    radial-gradient(circle at top right, rgba(72, 227, 196, 0.22), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(255, 196, 92, 0.2), transparent 36%),
+    linear-gradient(180deg, var(--bg), var(--bg-deep));
   overflow-y: auto;
   z-index: 10000;
   display: flex;
   flex-direction: column;
 }
 
+.help-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.help-header-copy {
+  min-width: 0;
+}
+
 .help-close-btn {
-  position: fixed;
-  top: 20px;
-  right: 20px;
+  position: sticky;
+  top: 12px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: white;
-  border: none;
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
+  color: var(--text-primary);
   font-size: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
   transition: all 0.3s ease;
   z-index: 10001;
 }
@@ -45,22 +58,22 @@
   flex: 1;
   max-width: 900px;
   margin: 0 auto;
-  padding: 40px 20px;
-  color: white;
+  padding: calc(18px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom));
+  color: var(--text-primary);
 }
 
 .help-content h1 {
-  font-size: 2.5rem;
+  font-size: clamp(1.65rem, 3.8vw, 2.35rem);
   margin: 0 0 10px 0;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  line-height: 1.12;
+  color: var(--text-primary);
 }
 
 .help-intro {
-  font-size: 1.1rem;
-  text-align: center;
-  margin: 0 0 40px 0;
-  opacity: 0.95;
+  font-size: 1rem;
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text-secondary);
 }
 
 .help-section {
@@ -68,16 +81,16 @@
 }
 
 .help-section h2 {
-  font-size: 1.8rem;
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid var(--panel-border);
 }
 
 .help-card {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 16px;
@@ -85,15 +98,15 @@
 }
 
 .help-card:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--surface-alt);
+  border-color: var(--chip-active-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .help-card h3 {
   margin: 0 0 16px 0;
   font-size: 1.3rem;
-  color: #ffffff;
+  color: var(--text-primary);
 }
 
 .help-instruction {
@@ -106,7 +119,8 @@
   flex-shrink: 0;
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(47, 216, 180, 0.18);
+  border: 1px solid rgba(47, 216, 180, 0.36);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -123,14 +137,14 @@
 .step-content p {
   margin: 8px 0;
   line-height: 1.6;
-  opacity: 0.95;
+  color: var(--text-secondary);
 }
 
 .hint {
   margin-top: 12px;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.1);
-  border-left: 3px solid rgba(255, 255, 255, 0.5);
+  background: var(--surface-alt);
+  border-left: 3px solid var(--chip-active-border);
   border-radius: 4px;
   font-size: 0.9rem;
 }
@@ -143,9 +157,9 @@
 }
 
 .feature {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
   padding: 20px;
   text-align: center;
@@ -153,8 +167,8 @@
 }
 
 .feature:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--surface-alt);
+  border-color: var(--chip-active-border);
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
@@ -164,8 +178,8 @@
   height: 56px;
   margin: 0 auto;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(47, 216, 180, 0.14);
+  border: 1px solid rgba(47, 216, 180, 0.32);
   display: grid;
   place-items: center;
   margin-bottom: 12px;
@@ -175,7 +189,7 @@
   width: 30px;
   height: 30px;
   fill: none;
-  stroke: rgba(255, 255, 255, 0.95);
+  stroke: var(--text-primary);
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -199,9 +213,9 @@
 }
 
 .tips-list li {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--surface);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--panel-border);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 12px;
@@ -210,26 +224,27 @@
 }
 
 .tips-list li:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: var(--surface-alt);
+  border-color: var(--chip-active-border);
 }
 
 .quick-ref-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  border: 1px solid var(--panel-border);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .quick-ref-table tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid var(--panel-border);
   transition: background 0.3s ease;
 }
 
 .quick-ref-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-alt);
 }
 
 .quick-ref-table td {
@@ -254,9 +269,9 @@
   gap: 10px;
   padding: 12px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  border: 1px solid var(--panel-border);
+  background: var(--surface);
+  color: var(--text-primary);
   text-decoration: none;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -265,8 +280,8 @@
 
 .help-repo-link:hover,
 .help-repo-link:focus-visible {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.44);
+  background: var(--surface-alt);
+  border-color: var(--chip-active-border);
   transform: translateY(-1px);
   outline: none;
 }
@@ -281,7 +296,7 @@
   text-align: center;
   margin-top: 40px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid var(--panel-border);
   opacity: 0.85;
 }
 
@@ -311,11 +326,17 @@
 /* Mobile responsiveness */
 @media (max-width: 768px) {
   .help-content {
-    padding: 60px 16px 30px;
+    padding: calc(14px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom));
+  }
+
+  .help-header {
+    gap: 10px;
+    margin-bottom: 14px;
   }
 
   .help-content h1 {
-    font-size: 2rem;
+    font-size: 1.52rem;
+    margin-bottom: 6px;
   }
 
   .help-section h2 {
@@ -331,13 +352,14 @@
   }
 
   .help-close-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    top: 8px;
   }
 
   .quick-ref-table {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
   }
 
   .quick-ref-table td {
@@ -347,11 +369,11 @@
 
 @media (max-width: 480px) {
   .help-content {
-    padding: 60px 12px 20px;
+    padding: calc(10px + env(safe-area-inset-top)) 10px calc(20px + env(safe-area-inset-bottom));
   }
 
   .help-content h1 {
-    font-size: 1.6rem;
+    font-size: 1.34rem;
   }
 
   .help-section h2 {
@@ -360,6 +382,7 @@
 
   .help-instruction {
     gap: 12px;
+    align-items: flex-start;
   }
 
   .step-number {
@@ -376,5 +399,22 @@
   .feature-icon svg {
     width: 26px;
     height: 26px;
+  }
+
+  .help-card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .help-card h3 {
+    font-size: 1.02rem;
+  }
+
+  .quick-ref-table {
+    font-size: 0.82rem;
+  }
+
+  .quick-ref-table td {
+    padding: 9px;
   }
 }

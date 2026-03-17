@@ -3,13 +3,16 @@ import './HelpPage.css'
 export default function HelpPage({ onClose }) {
   return (
     <div className="help-page">
-      <button type="button" className="help-close-btn" onClick={onClose} aria-label="Close help">
-        ✕
-      </button>
-
       <div className="help-content">
-        <h1>AMCS Navigator Guide</h1>
-        <p className="help-intro">Learn how to navigate through the campus using AMCS Navigator</p>
+        <header className="help-header">
+          <div className="help-header-copy">
+            <h1>AMCS Navigator Guide</h1>
+            <p className="help-intro">Use this guide to set route start, destination, and timetable mode quickly on mobile.</p>
+          </div>
+          <button type="button" className="help-close-btn" onClick={onClose} aria-label="Close help">
+            ✕
+          </button>
+        </header>
 
         <section className="help-section">
           <h2>Finding a Route</h2>
