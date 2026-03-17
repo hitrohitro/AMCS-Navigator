@@ -1,0 +1,345 @@
+.help-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow-y: auto;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-close-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  z-index: 10001;
+}
+
+.help-close-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.help-close-btn:active {
+  transform: scale(0.95);
+}
+
+.help-content {
+  flex: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: white;
+}
+
+.help-content h1 {
+  font-size: 2.5rem;
+  margin: 0 0 10px 0;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.help-intro {
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 0 0 40px 0;
+  opacity: 0.95;
+}
+
+.help-section {
+  margin-bottom: 40px;
+}
+
+.help-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.help-card {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: all 0.3s ease;
+}
+
+.help-card:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.help-card h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.3rem;
+  color: #ffffff;
+}
+
+.help-instruction {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content p {
+  margin: 8px 0;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+.hint {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border-left: 3px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.help-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.feature {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.feature:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.feature-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+}
+
+.feature-icon svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.feature h3 {
+  margin: 12px 0 8px 0;
+  font-size: 1.1rem;
+}
+
+.feature p {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.tips-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0 0;
+}
+
+.tips-list li {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+}
+
+.tips-list li:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.quick-ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.quick-ref-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  transition: background 0.3s ease;
+}
+
+.quick-ref-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.quick-ref-table td {
+  padding: 16px;
+  text-align: left;
+}
+
+.column-label {
+  font-weight: 600;
+  width: 30%;
+}
+
+.help-footer {
+  text-align: center;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0.85;
+}
+
+.help-footer p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Scrollbar styling */
+.help-page::-webkit-scrollbar {
+  width: 8px;
+}
+
+.help-page::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.help-page::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.help-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .help-content {
+    padding: 60px 16px 30px;
+  }
+
+  .help-content h1 {
+    font-size: 2rem;
+  }
+
+  .help-section h2 {
+    font-size: 1.4rem;
+  }
+
+  .help-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .help-features {
+    grid-template-columns: 1fr;
+  }
+
+  .help-close-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .quick-ref-table {
+    font-size: 0.9rem;
+  }
+
+  .quick-ref-table td {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .help-content {
+    padding: 60px 12px 20px;
+  }
+
+  .help-content h1 {
+    font-size: 1.6rem;
+  }
+
+  .help-section h2 {
+    font-size: 1.2rem;
+  }
+
+  .help-instruction {
+    gap: 12px;
+  }
+
+  .step-number {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  .feature-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .feature-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+}

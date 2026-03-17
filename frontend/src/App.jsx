@@ -4,6 +4,7 @@ import './App.css'
 import { SEGMENT_PATH_CACHE } from './data/lineGeometryStore'
 import OverviewPanel from './components/OverviewPanel'
 import TimetablePanel from './components/TimetablePanel'
+import HelpPage from './components/HelpPage'
 import {
   BLOCK_MAX_FLOOR,
   blockLayouts,
@@ -339,6 +340,7 @@ function App() {
   const [isTimetableLoaded, setIsTimetableLoaded] = useState(false)
   const [smartMode, setSmartMode] = useState('current')
   const [smartPeriodIndex, setSmartPeriodIndex] = useState(null)
+  const [showHelp, setShowHelp] = useState(false)
   const programmeRequestRef = useRef(null)
 
   useEffect(() => {
@@ -673,7 +675,7 @@ function App() {
       entry: pickedEntry,
       message: `${formatPeriodTime(pickedEntry.period_number)} · ${pickedEntry.course_code || 'Class'} · ${pickedEntry.room_name || 'Room TBD'}${pickedEntry.map_node ? ` (${pickedEntry.map_node})` : ''}`,
     }
-  }, [clock, isTimetableLoaded, smartMode, smartPeriodIndex, timetableEntries, todayCode])
+  }, [isTimetableLoaded, smartMode, smartPeriodIndex, timetableEntries, todayCode])
 
   const applySmartDestination = async () => {
     if (!startSelection || selectionPhase === 'select-start') {
@@ -877,9 +879,20 @@ function App() {
     : (selectedSemesterOption?.semester_label ?? '')
 
   return (
-    <div className="app-shell">
+    <>
+      {showHelp && <HelpPage onClose={() => setShowHelp(false)} />}
+      <div className="app-shell">
       <header className="hero-panel">
         <nav className="top-nav" aria-label="Primary navigation">
+          <button
+            type="button"
+            className="nav-chip nav-chip--help"
+            onClick={() => setShowHelp(true)}
+            aria-label="Open help"
+            title="Help"
+          >
+            ?
+          </button>
           <button
             type="button"
             className="nav-chip nav-chip--theme"
@@ -1025,7 +1038,8 @@ function App() {
           </a>
         ))}
       </footer>
-    </div>
+      </div>
+    </>
   )
 }
 

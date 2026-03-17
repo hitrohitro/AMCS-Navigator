@@ -1,11 +1,14 @@
+import { useRef, useState } from 'react'
 import { blockInfo, blockLayouts, mapLandmarks, BLOCK_MAX_FLOOR } from '../data/campusData'
+import { FountainAnimation } from './FountainAnimation'
 
-function LandmarkLayer() {
+function LandmarkLayer({ fountainRef, onFountainActivate }) {
   return (
     <div className="campus-features" aria-hidden="true">
       {mapLandmarks.map((landmark) => (
         <div
           key={landmark.id}
+          ref={landmark.id === 'cube-fountain' ? fountainRef : null}
           data-landmark-id={landmark.id}
           className={`map-landmark map-landmark--${landmark.type}`}
           style={{
@@ -13,7 +16,22 @@ function LandmarkLayer() {
             top: `${landmark.y}%`,
             width: `${landmark.width}%`,
             height: `${landmark.height}%`,
+            ...(landmark.id === 'cube-fountain'
+              ? { pointerEvents: 'auto', cursor: 'pointer' }
+              : {}),
           }}
+          role={landmark.id === 'cube-fountain' ? 'button' : undefined}
+          tabIndex={landmark.id === 'cube-fountain' ? 0 : undefined}
+          aria-label={landmark.id === 'cube-fountain' ? 'Play fountain animation' : undefined}
+          onClick={landmark.id === 'cube-fountain' ? onFountainActivate : undefined}
+          onKeyDown={landmark.id === 'cube-fountain'
+            ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onFountainActivate()
+              }
+            }
+            : undefined}
         >
           {landmark.badge ? <span className="landmark-badge">{landmark.badge}</span> : null}
           <span className="landmark-label">{landmark.label}</span>
@@ -55,6 +73,13 @@ function OverviewPanel({
   smartDestinationAvailable,
   smartDestinationDisabled,
 }) {
+  const fountainRef = useRef(null)
+  const [fountainBurstId, setFountainBurstId] = useState(0)
+
+  const handleFountainActivate = () => {
+    setFountainBurstId((current) => current + 1)
+  }
+
   return (
     <>
       <section className="map-panel" aria-labelledby="map-panel-title">
@@ -151,7 +176,14 @@ function OverviewPanel({
         <div className="map-frame">
           <div className="map-main">
             <div className="campus-map" role="img" aria-label="Interactive AMCS block map">
-              <LandmarkLayer />
+              <LandmarkLayer
+                fountainRef={fountainRef}
+                onFountainActivate={handleFountainActivate}
+              />
+              <FountainAnimation
+                originRef={fountainRef}
+                burstId={fountainBurstId}
+              />
 
               {shouldRenderPathConnections ? (
                 <svg className="route-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">

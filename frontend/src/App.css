@@ -292,6 +292,20 @@
   background: rgba(255, 196, 92, 0.16);
 }
 
+.nav-chip--help {
+  border-color: rgba(129, 140, 248, 0.42);
+  background: rgba(129, 140, 248, 0.16);
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 10px 12px;
+}
+
+.nav-chip--help:hover,
+.nav-chip--help:focus-visible {
+  background: rgba(129, 140, 248, 0.28);
+  border-color: rgba(129, 140, 248, 0.72);
+}
+
 .primary-action:hover,
 .primary-action:focus-visible,
 .secondary-action:hover,
@@ -754,6 +768,13 @@
   border-radius: 0 4px 4px 0;
   background: linear-gradient(90deg, rgba(245, 165, 52, 0.95), rgba(242, 199, 92, 0.9));
   box-shadow: 0 2px 8px rgba(245, 165, 52, 0.4);
+}
+
+@media (min-width: 861px) {
+  .map-landmark[data-landmark-id='tech-bridge']::after {
+    left: calc(100% - 1px);
+    width: 22px;
+  }
 }
 
 .map-landmark[data-landmark-id='rear-gate'] {
@@ -1528,6 +1549,7 @@
     min-width: 42px;
     min-height: 48px;
     padding: 6px;
+    transform: translate(-58%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area'] {
@@ -1535,7 +1557,7 @@
     min-width: 34px;
     min-height: 34px;
     padding: 3px;
-    transform: translate(-74%, -50%);
+    transform: translate(-82%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area'] .landmark-badge {
@@ -1603,6 +1625,7 @@
     min-width: 40px;
     min-height: 46px;
     padding: 5px;
+    transform: translate(-62%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area']::after {
@@ -1611,7 +1634,7 @@
   }
 
   .map-landmark[data-landmark-id='parking-area'] {
-    transform: translate(-90%, -50%);
+    transform: translate(-96%, -50%);
   }
 
   .map-landmark[data-landmark-id='parking-area'] .landmark-badge {
