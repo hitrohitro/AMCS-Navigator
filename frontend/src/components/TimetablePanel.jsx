@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { PERIOD_TIMES, formatPeriodTime } from '../lib/routeRuntime'
 
 const DAY_SEQUENCE = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
@@ -34,6 +35,7 @@ function TimetablePanel({
   selectedProgramme,
   onBackToMap,
 }) {
+  const [expandedDay, setExpandedDay] = useState(null)
   const groupedByDay = DAY_SEQUENCE
     .map((dayCode) => ({
       dayCode,
@@ -87,24 +89,47 @@ function TimetablePanel({
       {!timetableLoading && !timetableError ? (
         groupedByDay.length > 0 ? (
           <div className="timetable-strip" aria-label="Complete timetable by day">
-            {groupedByDay.map((dayGroup) => (
-              <article key={dayGroup.dayCode} className="day-card">
-                <header>
-                  <h3>{dayGroup.dayLabel}</h3>
-                  <span>{dayGroup.items.filter((item) => !item.is_free).length} sessions</span>
-                </header>
-                <div className="session-list">
-                  {dayGroup.items.map((item) => (
-                    <div key={item.id} className={`session-card ${item.is_free ? 'is-free' : ''}`}>
-                      <p className="session-time">{formatPeriodTime(item.period_number)}</p>
-                      <strong>{item.is_free ? 'Free period' : (item.course_code || 'Course pending')}</strong>
-                      <p>{item.is_free ? 'No class scheduled' : formatRoom(item)}</p>
-                      <span>{item.is_free ? 'Available' : (item.programme || 'Programme not set')}</span>
+            {groupedByDay.map((dayGroup) => {
+              const isExpanded = expandedDay === dayGroup.dayCode
+              return (
+                <article key={dayGroup.dayCode} className={`day-card ${isExpanded ? 'is-expanded' : ''}`}>
+                  <header
+                    role="button"
+                    tabIndex={0}
+                    className="day-card-header"
+                    onClick={() => setExpandedDay(isExpanded ? null : dayGroup.dayCode)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setExpandedDay(isExpanded ? null : dayGroup.dayCode)
+                      }
+                    }}
+                    aria-expanded={isExpanded}
+                    aria-label={`${dayGroup.dayLabel}, ${dayGroup.items.filter((item) => !item.is_free).length} sessions`}
+                  >
+                    <div>
+                      <h3>{dayGroup.dayLabel}</h3>
+                      <span>{dayGroup.items.filter((item) => !item.is_free).length} sessions</span>
                     </div>
-                  ))}
-                </div>
-              </article>
-            ))}
+                    <span className={`day-card-toggle ${isExpanded ? 'is-open' : ''}`} aria-hidden="true">
+                      ▼
+                    </span>
+                  </header>
+                  {isExpanded ? (
+                    <div className="session-list">
+                      {dayGroup.items.map((item) => (
+                        <div key={item.id} className={`session-card ${item.is_free ? 'is-free' : ''}`}>
+                          <p className="session-time">{formatPeriodTime(item.period_number)}</p>
+                          <strong>{item.is_free ? 'Free period' : (item.course_code || 'Course pending')}</strong>
+                          <p>{item.is_free ? 'No class scheduled' : formatRoom(item)}</p>
+                          <span>{item.is_free ? 'Available' : (item.programme || 'Programme not set')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </article>
+              )
+            })}
           </div>
         ) : (
           <p className="route-guide-text is-placeholder">No timetable entries found for the selected filters.</p>
