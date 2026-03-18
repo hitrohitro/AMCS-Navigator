@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import './App.css'
 import { SEGMENT_PATH_CACHE } from './data/lineGeometryStore'
 import OverviewPanel from './components/OverviewPanel'
@@ -1047,6 +1048,7 @@ function App() {
           </a>
         ))}
       </footer>
+      <SpeedInsights />
       </div>
     </>
   )
