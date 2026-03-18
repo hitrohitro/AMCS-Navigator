@@ -6,8 +6,8 @@ export default function HelpPage({ onClose }) {
       <div className="help-content">
         <header className="help-header">
           <div className="help-header-copy">
-            <h1>AMCS Navigator Guide</h1>
-            <p className="help-intro">Use this guide to set route start, destination, and timetable mode quickly on mobile.</p>
+            <h1>Navigator Guide</h1>
+            <p className="help-intro">A quick visual guide to using the interactive campus map.</p>
           </div>
           <button type="button" className="help-close-btn" onClick={onClose} aria-label="Close help">
             ✕
@@ -15,54 +15,51 @@ export default function HelpPage({ onClose }) {
         </header>
 
         <section className="help-section">
-          <h2>Finding a Route</h2>
-          <div className="help-card">
-            <h3>Step 1: Select Your Starting Point</h3>
-            <div className="help-instruction">
-              <p className="step-number">1</p>
-              <div className="step-content">
-                <p>Click on any <strong>highlighted block</strong> shown in the campus map to select your starting location.</p>
-                <p className="hint">You must confirm this selection before moving to the next step.</p>
+          <h2>Interactive Routing</h2>
+          <div className="route-steps-container">
+            <div className="visual-step">
+              <div className="step-icon-wrap">
+                <div className="step-number-badge">1</div>
+                <svg viewBox="0 0 24 24" className="step-icon" aria-hidden="true" focusable="false">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
               </div>
+              <h3>Pick Start Block</h3>
+              <p>Tap a highlighted building on the map.</p>
             </div>
-          </div>
-
-          <div className="help-card">
-            <h3>Step 2: Select Floor Level</h3>
-            <div className="help-instruction">
-              <p className="step-number">2</p>
-              <div className="step-content">
-                <p>Choose the <strong>floor level</strong> (0-4) you want to start from using the floor selector.</p>
-                <p className="hint">Each block has multiple floors. Ground floor is level 0.</p>
+            
+            <div className="step-connector"></div>
+            
+            <div className="visual-step">
+              <div className="step-icon-wrap">
+                <div className="step-number-badge">2</div>
+                <svg viewBox="0 0 24 24" className="step-icon" aria-hidden="true" focusable="false">
+                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                  <line x1="4" y1="22" x2="4" y2="15" />
+                </svg>
               </div>
+              <h3>Confirm Start</h3>
+              <p>Hit the blue Confirm button. Then pick your destination.</p>
             </div>
-          </div>
-
-          <div className="help-card">
-            <h3>Step 3: Confirm Starting Point</h3>
-            <div className="help-instruction">
-              <p className="step-number">3</p>
-              <div className="step-content">
-                <p>Click the <strong>"Confirm"</strong> button to set your starting location.</p>
-                <p className="hint">Once confirmed, you'll move to selecting your destination.</p>
+            
+            <div className="step-connector"></div>
+            
+            <div className="visual-step">
+              <div className="step-icon-wrap">
+                <div className="step-number-badge">3</div>
+                <svg viewBox="0 0 24 24" className="step-icon" aria-hidden="true" focusable="false">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
               </div>
-            </div>
-          </div>
-
-          <div className="help-card">
-            <h3>Step 4: Select Your Destination</h3>
-            <div className="help-instruction">
-              <p className="step-number">4</p>
-              <div className="step-content">
-                <p>Repeat the process: select a block, choose the floor, and confirm. This time for your destination.</p>
-                <p className="hint">The route will be calculated automatically once both points are confirmed.</p>
-              </div>
+              <h3>View Route</h3>
+              <p>Follow the glowing line to your destination!</p>
             </div>
           </div>
         </section>
 
         <section className="help-section">
-          <h2>Understanding the Map Display</h2>
+          <h2>Map Legend</h2>
           <div className="help-features">
             <div className="feature">
               <div className="feature-icon" aria-hidden="true">
@@ -70,8 +67,8 @@ export default function HelpPage({ onClose }) {
                   <rect x="5" y="5" width="14" height="14" rx="2" />
                 </svg>
               </div>
-              <h3>Blocks</h3>
-              <p>Clickable building blocks. Highlighted blocks mean they're navigable.</p>
+              <h3>Selectable Blocks</h3>
+              <p>Colored buildings are interactive.</p>
             </div>
             <div className="feature">
               <div className="feature-icon" aria-hidden="true">
@@ -81,7 +78,7 @@ export default function HelpPage({ onClose }) {
                 </svg>
               </div>
               <h3>Route Path</h3>
-              <p>The calculated shortest path from your start to destination, shown as a colored line on the map.</p>
+              <p>The shortest route between buildings.</p>
             </div>
             <div className="feature">
               <div className="feature-icon" aria-hidden="true">
@@ -91,8 +88,8 @@ export default function HelpPage({ onClose }) {
                   <path d="M16 16V9" />
                 </svg>
               </div>
-              <h3>Bridges</h3>
-              <p>Connections between blocks on the same floor level that the route may use.</p>
+              <h3>Connectors</h3>
+              <p>Bridges linking blocks on the same floor.</p>
             </div>
             <div className="feature">
               <div className="feature-icon" aria-hidden="true">
@@ -102,74 +99,42 @@ export default function HelpPage({ onClose }) {
                   <path d="M9 19h6" />
                 </svg>
               </div>
-              <h3>Selection Indicator</h3>
-              <p>Shows your currently selected block and floor in the "Selection" field at the top.</p>
+              <h3>Selection</h3>
+              <p>Check the top panel for current block/floor.</p>
             </div>
           </div>
         </section>
 
         <section className="help-section">
-          <h2>Using Timetable Features</h2>
-          <div className="help-card">
-            <h3>View Your Timetable</h3>
-            <div className="help-instruction">
-              <p>1. Select your <strong>Programme</strong> from the dropdown</p>
-              <p>2. A <strong>Semester</strong> will be suggested automatically</p>
-              <p>3. Click <strong>"Load timetable"</strong> to see your schedule</p>
-              <p className="hint">The "Timetable" tab shows your classes with locations</p>
+          <h2>Pro Tips</h2>
+          <div className="pro-tips-grid">
+            <div className="tip-card">
+              <div className="tip-icon-sidebar">
+                <svg viewBox="0 0 24 24" className="tip-icon" aria-hidden="true" focusable="false">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+              </div>
+              <div className="tip-content">
+                <strong>Timetable Sync</strong>
+                <p>Load your timetable to enable "Smart Mode" routing to your next class automatically.</p>
+              </div>
+            </div>
+            <div className="tip-card">
+              <div className="tip-icon-sidebar">
+                <svg viewBox="0 0 24 24" className="tip-icon" aria-hidden="true" focusable="false">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+              </div>
+              <div className="tip-content">
+                <strong>Resetting Routes</strong>
+                <p>Made a mistake? Hit "Reset selection" to clear the map instantly.</p>
+              </div>
             </div>
           </div>
-
-          <div className="help-card">
-            <h3>Smart Mode Navigation</h3>
-            <div className="help-instruction">
-              <p>Choose from:</p>
-              <ul>
-                <li><strong>Previous</strong> - Lesson from before this time</li>
-                <li><strong>Current</strong> - Ongoing lesson right now</li>
-                <li><strong>Next</strong> - Upcoming lesson</li>
-              </ul>
-              <p className="hint">Click "Apply" to automatically navigate to that lesson location</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="help-section">
-          <h2>Helpful Tips</h2>
-          <ul className="tips-list">
-            <li><strong>Live Time</strong>: Check the current time in the top section</li>
-            <li><strong>Selection Summary</strong>: Shows your current block-floor selection</li>
-            <li><strong>Reset Route</strong>: Start over by clicking "Reset" after confirming a route</li>
-            <li><strong>External Links</strong>: Quick access to campus resources in the top navigation</li>
-          </ul>
-        </section>
-
-        <section className="help-section">
-          <h2>Quick Reference</h2>
-          <table className="quick-ref-table">
-            <tbody>
-              <tr>
-                <td className="column-label">Blocks</td>
-                <td>Click on colored areas in the map</td>
-              </tr>
-              <tr>
-                <td className="column-label">Floor Selection</td>
-                <td>Use arrows or click the floor number</td>
-              </tr>
-              <tr>
-                <td className="column-label">Confirm Selection</td>
-                <td>Press the blue "Confirm" button</td>
-              </tr>
-              <tr>
-                <td className="column-label">View Route</td>
-                <td>Path appears on map after confirming destination</td>
-              </tr>
-              <tr>
-                <td className="column-label">Read Instructions</td>
-                <td>Text directions below the map</td>
-              </tr>
-            </tbody>
-          </table>
         </section>
 
         <div className="help-repo-link-wrap">
