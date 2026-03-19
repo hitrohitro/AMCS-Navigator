@@ -170,7 +170,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
-@app.get('/health')
+@app.api_route('/health', methods=['GET', 'HEAD'])
 def health() -> dict[str, str]:
 	return {'status': 'ok'}
 
