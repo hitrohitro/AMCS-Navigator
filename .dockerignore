@@ -1,0 +1,39 @@
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Frontend (not needed for backend image)
+frontend/
+
+# Project files
+.env
+.env.local
+*.md
+README.md
+
+# Dependencies
+*.egg-info
+dist/
+build/
+
+# OS
+Thumbs.db
