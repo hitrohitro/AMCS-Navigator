@@ -300,10 +300,6 @@ function OverviewPanel({
               <p className="legend-title">Legend</p>
               <div className="map-legend">
                 <span className="legend-item">
-                  <i className="legend-dot connector"></i>
-                  Connector
-                </span>
-                <span className="legend-item">
                   <i className="legend-dot accent"></i>
                   Main blocks
                 </span>
