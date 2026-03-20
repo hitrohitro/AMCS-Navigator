@@ -1,55 +1,55 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root {
-  /* Light Theme (High Contrast) */
-  --bg: #f1f5f9;
-  --bg-deep: #cbd5e1;
+  /* Light Theme - Modern & Aesthetic */
+  --bg: #f0f9ff;
+  --bg-deep: #dbeafe;
   --surface: #ffffff;
-  --surface-alt: #f1f5f9;
-  --border-strong: #94a3b8;
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
+  --surface-alt: #f0f9ff;
+  --border-strong: #7dd3fc;
+  --text-primary: #0c2d4d;
+  --text-secondary: #1e5a96;
   --text-muted: #64748b;
   --text-muted-dark: #475569;
   --text-inverse: #ffffff;
-  --accent: #4f46e5; /* Deeper Indigo */
-  --accent-strong: #059669; /* Rich Emerald */
-  --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.1);
+  --accent: #0ea5e9; /* Sky Blue */
+  --accent-strong: #10b981; /* Emerald */
+  --shadow-soft: 0 10px 30px rgba(6, 182, 212, 0.12);
 
-  --secondary-btn-bg: #f1f5f9;
-  --panel-border: #cbd5e1;
-  --chip-border: #94a3b8;
-  --chip-bg: #ffffff;
+  --secondary-btn-bg: #e0f2fe;
+  --panel-border: #bae6fd;
+  --chip-border: #7dd3fc;
+  --chip-bg: #f0f9ff;
   --chip-active-border: var(--accent);
-  --chip-active-bg: #e0e7ff;
-  --selection-bg: #f1f5f9;
+  --chip-active-bg: #cffafe;
+  --selection-bg: #e0f2fe;
   
   --map-bg: #ffffff;
-  --map-border: #cbd5e1;
-  --route-node-stroke: #0f172a;
-  --route-node-label: #0f172a;
-  --path-chip-bg: #d1fae5;
-  --path-arrow: #059669;
+  --map-border: #bae6fd;
+  --route-node-stroke: #0c2d4d;
+  --route-node-label: #0c2d4d;
+  --path-chip-bg: #a7f3d0;
+  --path-arrow: #10b981;
   
   --panel-card-bg: #ffffff;
-  --route-guide-bg: #f8fafc;
-  --legend-item-bg: #f1f5f9;
-  --legend-item-border: #cbd5e1;
+  --route-guide-bg: #f0f9ff;
+  --legend-item-bg: #f0f9ff;
+  --legend-item-border: #bae6fd;
   --day-card-bg: #ffffff;
-  --session-border: #e2e8f0;
+  --session-border: #cffafe;
   
   --error-color: #ef4444;
-  --block-accent-from: #6366f1;
-  --block-accent-mid: #8b5cf6;
-  --block-accent-to: #a855f7;
-  --block-neutral-from: #475569;
-  --block-neutral-mid: #334155;
-  --block-neutral-to: #1e293b;
-  --block-sheen: rgba(255, 255, 255, 0.1);
+  --block-accent-from: #0ea5e9;
+  --block-accent-mid: #06b6d4;
+  --block-accent-to: #0891b2;
+  --block-neutral-from: #64748b;
+  --block-neutral-mid: #475569;
+  --block-neutral-to: #334155;
+  --block-sheen: rgba(255, 255, 255, 0.15);
   
-  --legend-connector: #6366f1;
-  --legend-accent: #8b5cf6;
-  --legend-neutral: #475569;
+  --legend-connector: #0ea5e9;
+  --legend-accent: #06b6d4;
+  --legend-neutral: #64748b;
   --selected-indicator: #10b981;
   --selected-indicator-soft: rgba(16, 185, 129, 0.15);
   
