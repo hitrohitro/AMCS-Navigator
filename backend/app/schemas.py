@@ -33,19 +33,16 @@ class TimetableOptionsResponse(BaseModel):
 
 class TimetableEntryResponse(BaseModel):
     id: int
-    semester_id: int
-    programme: str | None = None
     day_of_week: str
     period_number: int
     course_code: str | None = None
+    course_name: str | None = None
     room_id: int | None = None
     room_name: str | None = None
     map_node: str | None = None
 
 
 class TimetableResponse(BaseModel):
-    academic_year: str
-    term: str
     programme: str | None = None
-    day_of_week: str | None = None
-    entries: list[TimetableEntryResponse]
+    semester: int
+    timetable: list[TimetableEntryResponse]

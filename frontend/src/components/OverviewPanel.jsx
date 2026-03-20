@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { blockInfo, blockLayouts, mapLandmarks, BLOCK_MAX_FLOOR } from '../data/campusData'
 import { FountainAnimation } from './FountainAnimation'
 
@@ -74,11 +74,21 @@ function OverviewPanel({
   smartDestinationDisabled,
 }) {
   const fountainRef = useRef(null)
+  const todayTimetableRef = useRef(null)
   const [fountainBurstId, setFountainBurstId] = useState(0)
 
   const handleFountainActivate = () => {
     setFountainBurstId((current) => current + 1)
   }
+
+  // Auto-scroll to today's timetable when data loads
+  useEffect(() => {
+    if (!todayTimetableLoading && todaySchedule && todayTimetableRef.current) {
+      setTimeout(() => {
+        todayTimetableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 250)
+    }
+  }, [todayTimetableLoading, todaySchedule])
 
   return (
     <>
@@ -360,7 +370,7 @@ function OverviewPanel({
         </div>
       </section>
 
-      <section className="today-timetable">
+      <section className="today-timetable" ref={todayTimetableRef}>
         <div className="section-heading">
           <div>
             <p className="section-kicker">Today</p>

@@ -252,8 +252,6 @@ def get_path(
 @app.get('/api/timetable/options', response_model=TimetableOptionsResponse)
 def get_timetable_options(
 	programme: str | None = Query(default=None),
-	academic_year: str | None = Query(default=None),
-	term: str | None = Query(default=None),
 ) -> TimetableOptionsResponse:
 	normalized_programme = programme.strip() if programme else None
 	semesters = _load_semesters()
@@ -262,18 +260,7 @@ def get_timetable_options(
 
 	active_semester = None
 	if semester_options:
-		if academic_year and term:
-			normalized_term = _normalize_term(term)
-			active_semester = next(
-				(
-					semester
-					for semester in semester_options
-					if semester.academic_year == academic_year and semester.term == normalized_term
-				),
-				None,
-			)
-		if active_semester is None:
-			active_semester = next((semester for semester in semester_options if semester.is_active), None)
+		active_semester = next((semester for semester in semester_options if semester.is_active), None)
 		if active_semester is None:
 			active_semester = semester_options[-1]
 
@@ -286,29 +273,37 @@ def get_timetable_options(
 
 @app.get('/api/timetable', response_model=TimetableResponse)
 def get_timetable(
-	semester_id: int | None = Query(default=None),
-	academic_year: str | None = Query(default=None),
-	term: str | None = Query(default=None),
+	semester_number: int | None = Query(default=None),
 	programme: str | None = Query(default=None),
 	day_of_week: str | None = Query(default=None),
 ) -> TimetableResponse:
 	semesters = _load_semesters()
-	if semester_id is not None:
+	
+	if not semesters:
+		raise HTTPException(status_code=404, detail='No semesters found.')
+
+	# Determine the latest academic year
+	semesters_sorted = sorted(semesters, key=_semester_sort_key, reverse=True)
+	latest_academic_year = semesters_sorted[0].get('academic_year')
+	
+	selected_semester = None
+	if semester_number is not None:
 		selected_semester = next(
-			(s for s in semesters if int(s['id']) == semester_id),
+			(s for s in semesters if s.get('academic_year') == latest_academic_year and int(s.get('semester_number', 0) or 0) == semester_number),
 			None,
 		)
 		if not selected_semester:
-			raise HTTPException(status_code=404, detail='Semester not found.')
+			raise HTTPException(status_code=404, detail='Semester not found for the latest academic year.')
 	else:
-		selected_semester = _pick_semester(semesters, academic_year, term)
+		selected_semester = next((s for s in semesters if s.get('is_active')), semesters_sorted[0])
+
 	normalized_programme = programme.strip() if programme else None
 	normalized_day = _normalize_day(day_of_week) if day_of_week else None
 
 	rows = supabase_get(
 		'timetable',
 		{
-			'select': 'id,semester_id,programme,day_of_week,period_number,course_code,room_id',
+			'select': 'id,semester_id,programme,day_of_week,period_number,course_code,courses(course_name),rooms(id,room_name,map_node)',
 			'semester_id': f"eq.{selected_semester['id']}",
 			'order': 'day_of_week.asc,period_number.asc',
 		},
@@ -323,29 +318,18 @@ def get_timetable(
 	room_ids = sorted({int(row['room_id']) for row in rows if row.get('room_id') is not None})
 	room_lookup: dict[int, dict] = {}
 
-	if room_ids:
-		room_rows = supabase_get(
-			'rooms',
-			{
-				'select': 'id,room_name,map_node',
-				'id': f"in.({','.join(str(room_id) for room_id in room_ids)})",
-			},
-		)
-		room_lookup = {int(room['id']): room for room in room_rows}
-
 	entries: list[TimetableEntryResponse] = []
 	for row in rows:
-		room_id = int(row['room_id']) if row.get('room_id') is not None else None
-		room = room_lookup.get(room_id) if room_id is not None else None
+		course = row.get('courses')
+		room = row.get('rooms')
 		entries.append(
 			TimetableEntryResponse(
 				id=int(row['id']),
-				semester_id=int(row['semester_id']),
-				programme=str(row.get('programme')).strip() if row.get('programme') else None,
 				day_of_week=str(row.get('day_of_week', '')).upper(),
 				period_number=int(row.get('period_number') or 0),
 				course_code=str(row.get('course_code')).strip() if row.get('course_code') else None,
-				room_id=room_id,
+				course_name=str(course.get('course_name')).strip() if course and course.get('course_name') else None,
+				room_id=int(room.get('id')) if room and room.get('id') else None,
 				room_name=str(room.get('room_name')).strip() if room and room.get('room_name') else None,
 				map_node=str(room.get('map_node')).strip() if room and room.get('map_node') else None,
 			)
@@ -358,10 +342,11 @@ def get_timetable(
 		),
 	)
 
+	semester_number_from_db = selected_semester.get('semester_number')
+	semester_res = int(semester_number_from_db) if semester_number_from_db is not None else 0
+
 	return TimetableResponse(
-		academic_year=str(selected_semester['academic_year']),
-		term=str(selected_semester['term']).upper(),
 		programme=normalized_programme,
-		day_of_week=normalized_day,
-		entries=entries,
+		semester=semester_res,
+		timetable=entries,
 	)
