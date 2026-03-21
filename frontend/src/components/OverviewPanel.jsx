@@ -408,7 +408,7 @@ function OverviewPanel({
 
       p = Math.max(0, Math.min(1, p))
 
-      const bufferStart = 0.4
+      const bufferStart = 0.25
       const bufferEnd = 0.6
       let mappedProgress = 0
 
