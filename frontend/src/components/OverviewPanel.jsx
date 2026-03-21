@@ -47,12 +47,6 @@ const getScatterScale = () => {
   return 1
 }
 
-/**
- * Compute the document-relative top of an element robustly,
- * accounting for the current scroll position.
- */
-const getDocumentTop = (el) => el.getBoundingClientRect().top + window.scrollY
-
 // ---------------------------------------------------------------------------
 // Sub-components (unchanged from original)
 // ---------------------------------------------------------------------------
@@ -180,12 +174,18 @@ function LandmarkLayer({ fountainRef, onFountainActivate }) {
  *   Layout measurements are cached and only refreshed when necessary.
  * • GSAP transforms are cleared on cleanup to prevent stale state.
  */
-function useMapAssemblyAnimation(sectionRef, mapRef) {
+function useMapAssemblyAnimation(mapRef, mappedProgress, isPathSelected) {
+  const isPathSelectedRef = useRef(isPathSelected)
+  const mappedProgressRef = useRef(mappedProgress)
+  const runtimeRef = useRef(null)
+  const lockTweenRef = useRef(null)
+  const renderedMappedProgressRef = useRef(0)
+  const handoffGuardUntilRef = useRef(0)
+
   useLayoutEffect(() => {
-    const sectionEl = sectionRef.current
     const mapEl     = mapRef.current
 
-    if (!sectionEl || !mapEl) return
+    if (!mapEl) return
 
     // ------------------------------------------------------------------
     // 1. Resolve DOM nodes for every config entry once at mount.
@@ -231,50 +231,38 @@ function useMapAssemblyAnimation(sectionRef, mapRef) {
     //    These are the only values that require a layout read.
     //    Re-computed on resize / orientationchange, never on scroll.
     // ------------------------------------------------------------------
-    let sectionTop    = 0
-    let viewportH     = 0
     let mapW          = 0
     let mapH          = 0
     let scatterScale  = 1
 
-    // Scroll boundaries (all document-relative px values).
-    let assemblyStart = 0
-    let assemblyEnd   = 0
-
     const refreshLayout = () => {
-      viewportH    = window.innerHeight
-      sectionTop   = getDocumentTop(sectionEl)
       mapW         = mapEl.clientWidth
       mapH         = mapEl.clientHeight
       scatterScale = getScatterScale()
-
-      // Start later so flying begins closer to the map section.
-      assemblyStart = Math.max(0, sectionTop - viewportH * 1.3)
-      assemblyEnd = Math.max(assemblyStart + 1, sectionTop - viewportH * 0.2)
     }
 
     // ------------------------------------------------------------------
     // 3. Pure interpolation — no DOM reads, only DOM writes.
     // ------------------------------------------------------------------
-    const applyProgress = (progress) => {
+    const applyMappedProgress = (mappedProgressValue) => {
       animatedNodes.forEach(({ node, initial, final }) => {
-        // Interpolate from scattered (progress=0) → final (progress=1).
+        // Interpolate from scattered (mappedProgress=0) -> final (mappedProgress=1).
         const x0 = initial.x * mapW * scatterScale
         const y0 = initial.y * mapH * scatterScale
         const x1 = final.x * mapW
         const y1 = final.y * mapH
 
-        const x = x0 + ((x1 - x0) * progress)
-        const y = y0 + ((y1 - y0) * progress)
+        const x = x0 + ((x1 - x0) * mappedProgressValue)
+        const y = y0 + ((y1 - y0) * mappedProgressValue)
 
         gsap.set(node, {
           x,
           y,
           z: 0,
-          rotation: initial.rotate + ((final.rotate - initial.rotate) * progress),
-          scale: initial.scale + ((final.scale - initial.scale) * progress),
-          opacity: initial.opacity + ((final.opacity - initial.opacity) * progress),
-          filter: `blur(${(initial.blur + ((final.blur - initial.blur) * progress)).toFixed(3)}px)`,
+          rotation: initial.rotate + ((final.rotate - initial.rotate) * mappedProgressValue),
+          scale: initial.scale + ((final.scale - initial.scale) * mappedProgressValue),
+          opacity: initial.opacity + ((final.opacity - initial.opacity) * mappedProgressValue),
+          filter: `blur(${(initial.blur + ((final.blur - initial.blur) * mappedProgressValue)).toFixed(3)}px)`,
           transformOrigin: '50% 50%',
           force3D: true,
           overwrite: true,
@@ -283,44 +271,14 @@ function useMapAssemblyAnimation(sectionRef, mapRef) {
 
       // Expose progress as a CSS custom property and data attribute
       // so CSS rules / debugging tools can react to it.
-      mapEl.style.setProperty('--assembly-progress', progress.toFixed(4))
-      mapEl.dataset.assemblyProgress = progress.toFixed(3)
-      mapEl.classList.toggle('is-assembled', progress > 0.9)
+      mapEl.style.setProperty('--assembly-progress', mappedProgressValue.toFixed(4))
+      mapEl.dataset.assemblyProgress = mappedProgressValue.toFixed(3)
+      mapEl.classList.toggle('is-assembled', mappedProgressValue > 0.9)
+      renderedMappedProgressRef.current = mappedProgressValue
     }
 
     // ------------------------------------------------------------------
-    // 4. Compute progress from the current scroll position.
-    //    Uses only cached values — zero layout reads.
-    // ------------------------------------------------------------------
-    const computeProgress = () => {
-      const scrollY = window.scrollY
-
-      return clamp01((scrollY - assemblyStart) / (assemblyEnd - assemblyStart))
-    }
-
-    // ------------------------------------------------------------------
-    // 5. rAF-throttled scroll handler.
-    //    Skips repaints when progress hasn't meaningfully changed.
-    // ------------------------------------------------------------------
-    let rafId       = 0
-    let lastProgress = -1
-
-    const tick = () => {
-      rafId = 0
-      const next = computeProgress()
-      // Skip if change is sub-pixel insignificant.
-      if (Math.abs(next - lastProgress) < 0.0005) return
-      lastProgress = next
-      applyProgress(next)
-    }
-
-    const scheduleUpdate = () => {
-      if (rafId) return
-      rafId = window.requestAnimationFrame(tick)
-    }
-
-    // ------------------------------------------------------------------
-    // 6. Resize / orientation handler.
+    // 4. Resize / orientation handler.
     //    Re-measures layout then forces a repaint.
     // ------------------------------------------------------------------
     let resizeRafId = 0
@@ -330,44 +288,88 @@ function useMapAssemblyAnimation(sectionRef, mapRef) {
       resizeRafId = window.requestAnimationFrame(() => {
         resizeRafId = 0
         refreshLayout()
-        // Force a repaint even if scrollY hasn't changed.
-        lastProgress = -1
-        tick()
+        if (isPathSelectedRef.current) {
+          applyMappedProgress(renderedMappedProgressRef.current)
+        } else {
+          applyMappedProgress(mappedProgressRef.current)
+        }
       })
     }
 
     // ------------------------------------------------------------------
-    // 7. Bootstrap: measure → paint initial state → attach listeners.
+    // 5. Bootstrap: measure → paint initial state → attach listeners.
     // ------------------------------------------------------------------
     refreshLayout()
-    lastProgress = -1
-    tick()
+    applyMappedProgress(mappedProgress)
 
-    window.addEventListener('scroll',            scheduleUpdate,  { passive: true })
     window.addEventListener('resize',            handleResize)
     window.addEventListener('orientationchange', handleResize)
 
+    runtimeRef.current = {
+      applyMappedProgress,
+      syncToMappedProgress: (next) => {
+        applyMappedProgress(next)
+      },
+    }
+
     // ------------------------------------------------------------------
-    // 8. Cleanup: detach listeners, cancel pending frames, reset GSAP.
+    // 6. Cleanup: detach listeners, cancel pending frames, reset GSAP.
     // ------------------------------------------------------------------
     return () => {
-      window.removeEventListener('scroll',            scheduleUpdate)
       window.removeEventListener('resize',            handleResize)
       window.removeEventListener('orientationchange', handleResize)
 
-      if (rafId)       window.cancelAnimationFrame(rafId)
       if (resizeRafId) window.cancelAnimationFrame(resizeRafId)
+      if (lockTweenRef.current) {
+        lockTweenRef.current.kill()
+        lockTweenRef.current = null
+      }
 
-      // Clear GSAP transforms so remounts start from a clean slate.
-      animatedNodes.forEach(({ node }) => {
-        gsap.set(node, { clearProps: 'x,y,z,rotation,scale,opacity,filter' })
-      })
-
-      mapEl.style.removeProperty('--assembly-progress')
-      delete mapEl.dataset.assemblyProgress
-      mapEl.classList.remove('is-assembled')
+      runtimeRef.current = null
     }
-  }, []) // Intentionally empty — refs are stable; no deps needed.
+
+  }, [])
+
+  useEffect(() => {
+    mappedProgressRef.current = mappedProgress
+    const runtime = runtimeRef.current
+    if (!runtime || isPathSelectedRef.current) return
+    runtime.applyMappedProgress(mappedProgress)
+  }, [mappedProgress])
+
+  useEffect(() => {
+    isPathSelectedRef.current = isPathSelected
+
+    const runtime = runtimeRef.current
+    if (!runtime) return
+
+    if (lockTweenRef.current) {
+      lockTweenRef.current.kill()
+      lockTweenRef.current = null
+    }
+
+    // Debounce one-frame handoff so scroll and override updates never fight.
+    handoffGuardUntilRef.current = performance.now() + 40
+
+    if (isPathSelected) {
+      const state = { progress: renderedMappedProgressRef.current }
+      lockTweenRef.current = gsap.to(state, {
+        progress: 1,
+        duration: 0.26,
+        ease: 'power2.out',
+        onUpdate: () => {
+          runtime.applyMappedProgress(state.progress)
+        },
+        onComplete: () => {
+          renderedMappedProgressRef.current = 1
+        },
+      })
+      return
+    }
+
+    // Restore original scroll-driven behavior immediately without replay.
+    runtime.syncToMappedProgress(mappedProgress)
+  }, [isPathSelected, mappedProgress])
 }
 
 // ---------------------------------------------------------------------------
@@ -409,16 +411,68 @@ function OverviewPanel({
   const fountainRef        = useRef(null)
   const todayTimetableRef  = useRef(null)
   const assemblySectionRef = useRef(null)
-  const mapRootRef         = useRef(null)
+  const mapRef             = useRef(null)
+  const [mappedProgress, setMappedProgress] = useState(0)
 
   const [fountainBurstId, setFountainBurstId] = useState(0)
+  const [isPathSelected, setIsPathSelected] = useState(false)
 
   const handleFountainActivate = () => {
     setFountainBurstId((current) => current + 1)
   }
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!mapRef.current) return
+
+      const rect = mapRef.current.getBoundingClientRect()
+      const vh = window.innerHeight
+
+      // Normalize section visibility
+      let mappedProgressValue = (vh - rect.top) / (vh + rect.height)
+
+      mappedProgressValue = Math.max(0, Math.min(1, mappedProgressValue))
+
+      const bufferStart = 0.4
+      const bufferEnd = 0.6
+
+      if (mappedProgressValue < bufferStart) {
+        mappedProgressValue = mappedProgressValue / bufferStart
+      } else if (mappedProgressValue >= bufferStart && mappedProgressValue <= bufferEnd) {
+        mappedProgressValue = 1
+      } else {
+        mappedProgressValue = 1 - (mappedProgressValue - bufferEnd) / (1 - bufferEnd)
+      }
+
+      mappedProgressValue = Math.max(0, Math.min(1, mappedProgressValue))
+
+      setMappedProgress(mappedProgressValue)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('resize', handleScroll)
+
+    handleScroll()
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('resize', handleScroll)
+    }
+  }, [])
+
   // Attach the assembly animation (separated into its own hook for clarity).
-  useMapAssemblyAnimation(assemblySectionRef, mapRootRef)
+  useMapAssemblyAnimation(mapRef, mappedProgress, isPathSelected)
+
+  useEffect(() => {
+    if (hasConfirmedRoute) {
+      setIsPathSelected(true)
+    }
+  }, [hasConfirmedRoute])
+
+  const handleResetSelection = () => {
+    setIsPathSelected(false)
+    resetSelectionFlow()
+  }
 
   // Auto-scroll to today's timetable when data loads.
   useEffect(() => {
@@ -492,7 +546,7 @@ function OverviewPanel({
               <button
                 type="button"
                 className="secondary-action"
-                onClick={resetSelectionFlow}
+                onClick={handleResetSelection}
               >
                 Reset selection
               </button>
@@ -536,7 +590,7 @@ function OverviewPanel({
           <div className="map-frame">
             <div className="map-main">
               <div
-                ref={mapRootRef}
+                ref={mapRef}
                 className="campus-map"
                 role="img"
                 aria-label="Interactive AMCS block map"

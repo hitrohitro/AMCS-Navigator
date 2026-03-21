@@ -1276,6 +1276,14 @@
 }
 
 @media (min-width: 861px) {
+  .map-landmark[data-landmark-id='main-gate'] {
+    left: 31.5% !important;
+  }
+
+  .map-landmark[data-landmark-id='tech-bridge'] {
+    top: 74% !important;
+  }
+
   .map-landmark[data-landmark-id='tech-bridge']::after {
     left: calc(100% - 1px);
     width: 22px;
