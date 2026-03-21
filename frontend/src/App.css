@@ -998,8 +998,9 @@
 .campus-map .map-block,
 .campus-map .map-landmark {
   backface-visibility: hidden;
-  will-change: transform, opacity, filter;
+  will-change: transform, filter;
   transform: translate3d(0, 0, 0);
+  transition: none;
 }
 
 .campus-map .map-landmark {
@@ -1170,12 +1171,13 @@
 
 @media (min-width: 721px) {
   .map-landmark[data-landmark-id='rear-gate'] {
-    top: -3% !important;
+    left: 96% !important;
+    top: -4% !important;
   }
 
   .map-landmark[data-landmark-id='parking-area'] {
-    left: 92% !important;
-    top: 5% !important;
+    left: 90% !important;
+    top: 4% !important;
   }
 }
 
@@ -1287,6 +1289,17 @@
   .map-landmark[data-landmark-id='tech-bridge']::after {
     left: calc(100% - 1px);
     width: 22px;
+  }
+
+  :root:not([data-theme='dark']) .map-landmark[data-landmark-id='parking-area'] .landmark-badge {
+    color: #000000;
+    border-color: rgba(0, 0, 0, 0.4);
+    background: #ffffff;
+  }
+
+  :root:not([data-theme='dark']) .map-landmark[data-landmark-id='parking-area']::after {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12h11' stroke='%23000000' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='m12 7 7 5-7 5' fill='none' stroke='%23000000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+    filter: none;
   }
 }
 
@@ -1429,7 +1442,7 @@
   z-index: 2;
   min-width: 0;
   border: 0;
-  border-radius: 16px;
+  border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2778,7 +2791,8 @@
     min-width: 30px;
     min-height: 44px;
     padding: 6px;
-    top: -9% !important;
+    left: 95% !important;
+    top: -17% !important;
     transform: translate(-50%, -50%);
   }
 
@@ -2786,6 +2800,8 @@
     min-width: 36px;
     min-height: 36px;
     padding: 6px;
+    left: 82% !important;
+    top: 3% !important;
     transform: translate(-50%, -50%);
   }
 
@@ -2845,7 +2861,7 @@
   }
 
   .map-block[data-block-id='J'] {
-    margin-top: 10px !important;
+    margin-top: 12px !important;
   }
 
   .map-landmark--fountain {
@@ -2907,7 +2923,8 @@
     min-width: 30px;
     min-height: 44px;
     padding: 5px;
-    top: -10% !important;
+    left: 94% !important;
+    top: -18% !important;
     transform: translate(-50%, -50%);
     z-index: 6;
   }
@@ -2916,6 +2933,8 @@
     min-width: 36px;
     min-height: 36px;
     padding: 5px;
+    left: 80% !important;
+    top: 2% !important;
     transform: translate(-50%, -50%);
   }
 
@@ -3536,7 +3555,7 @@
   }
 
   .map-block {
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 7px;
   }
 
