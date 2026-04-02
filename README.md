@@ -160,7 +160,7 @@ docker compose logs -f
 
 ### Backend Environment Variables
 
-Create `backend/.env`:
+Create `backend/.env` from `backend/.env.example`:
 
 ```
 SUPABASE_URL=your-supabase-url
@@ -171,7 +171,7 @@ CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$
 
 ### Frontend Environment Variables
 
-Create `frontend/.env`:
+Create `frontend/.env` from `frontend/.env.example`:
 
 ```
 VITE_API_BASE_URL=http://localhost:8000
@@ -253,6 +253,8 @@ This repo includes:
 
 - `docker-compose.yml` (production container + auto-updater)
 - `.env.example` (required environment template)
+- `backend/.env.example` (backend local development template)
+- `frontend/.env.example` (frontend local development template)
 
 The container is named `amcs-navigator` (Docker container names cannot contain spaces).
 
