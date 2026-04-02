@@ -8,17 +8,18 @@ Interactive campus navigation and timetable assistant for university students.
 
 ## Quick Start
 
-### Option 1: Docker (Recommended - One Command)
+### Option 1: Docker (Production Container)
 
 **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
 ```bash
-docker-compose up
+cp .env.example .env
+docker compose up -d
 ```
 
 Backend runs on: `http://localhost:8000`
 
-Frontend setup: See below for frontend instructions.
+For local frontend development, use Option 2 below.
 
 ### Option 2: Traditional Setup
 
@@ -70,7 +71,7 @@ AMCS Navigator/
 │   ├── package.json
 │   └── vite.config.js
 ├── Dockerfile        # Backend containerization
-├── docker-compose.yml # Local development orchestration
+├── docker-compose.yml # Production container orchestration
 └── README.md         # You are here!
 ```
 
@@ -143,14 +144,14 @@ npm run dev
 ### With Docker
 
 ```bash
-# Build and start
-docker-compose up --build
+# Start services
+docker compose up -d
 
 # Stop
-docker-compose down
+docker compose down
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ---
@@ -216,15 +217,67 @@ This repo includes `frontend/vercel.json` for automatic deployment:
 5. Set environment variable:
    - `VITE_API_BASE_URL=https://your-render-backend.onrender.com`
 
+### Container CI/CD (GitHub Actions + GHCR)
+
+This repo now includes automatic Docker image publishing on every push via:
+
+- `.github/workflows/docker-publish.yml`
+
+Published image name:
+
+- `ghcr.io/<github-owner-lowercase>/amcs-navigator`
+
+Tags generated automatically:
+
+- `latest` on default branch
+- branch tags (for example: `main`)
+- commit SHA tags
+
+Required GitHub secret:
+
+- `GH_PAT`: Personal Access Token with at least these scopes:
+  - `write:packages`
+  - `read:packages`
+  - `repo`
+
+How to set it:
+
+1. GitHub repo -> Settings -> Secrets and variables -> Actions.
+2. Click "New repository secret".
+3. Name: `GH_PAT`
+4. Value: your PAT token.
+
+### Auto-Update Running Container
+
+This repo includes:
+
+- `docker-compose.yml` (production container + auto-updater)
+- `.env.example` (required environment template)
+
+The container is named `amcs-navigator` (Docker container names cannot contain spaces).
+
+Steps on your server/VM:
+
+1. Copy `.env.example` to `.env` and fill values.
+2. Start services:
+
+```bash
+docker compose up -d
+```
+
+`watchtower` checks every 30 seconds and updates the `amcs-navigator` container when a new `latest` image is available.
+
+If your GHCR package is private, run `docker login ghcr.io` on the server first (use a token with `read:packages`) so pulls can succeed.
+
 ---
 
 ### Docker
 
-| Issue                    | Solution                                             |
-| ------------------------ | ---------------------------------------------------- |
-| Port 8000 already in use | `docker-compose down` then retry                     |
-| `Connection refused`     | Wait 5-10s for container to start, check `docker ps` |
-| Changes not reflected    | Run `docker-compose up --build`                      |
+| Issue                    | Solution                                                                                        |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| Port 8000 already in use | `docker compose down` then retry                                                                |
+| `Connection refused`     | Wait 5-10s for container to start, check `docker ps`                                            |
+| Changes not reflected    | Push code and wait for Watchtower, or run `docker compose pull backend && docker compose up -d` |
 
 ### Backend
 
