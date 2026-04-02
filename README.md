@@ -8,7 +8,7 @@ Interactive campus navigation and timetable assistant for university students.
 
 ## Quick Start
 
-### Option 1: Docker (Production Container)
+### Option 1: Docker (Published Image / Server Deployment)
 
 **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 
@@ -19,7 +19,9 @@ docker compose up -d
 
 Backend runs on: `http://localhost:8000`
 
-For local frontend development, use Option 2 below.
+This starts the published GHCR image defined in [docker-compose.yml](docker-compose.yml).
+
+For local backend and frontend development, use Option 2 below.
 
 ### Option 2: Traditional Setup
 
@@ -71,7 +73,7 @@ AMCS Navigator/
 │   ├── package.json
 │   └── vite.config.js
 ├── Dockerfile        # Backend containerization
-├── docker-compose.yml # Production container orchestration
+├── docker-compose.yml # Published image orchestration
 └── README.md         # You are here!
 ```
 
@@ -160,7 +162,7 @@ docker compose logs -f
 
 ### Backend Environment Variables
 
-Create `backend/.env` from `backend/.env.example`:
+Create `backend/.env` from [backend/.env.example](backend/.env.example):
 
 ```
 SUPABASE_URL=your-supabase-url
@@ -171,11 +173,25 @@ CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$
 
 ### Frontend Environment Variables
 
-Create `frontend/.env` from `frontend/.env.example`:
+Create `frontend/.env` from [frontend/.env.example](frontend/.env.example):
 
 ```
 VITE_API_BASE_URL=http://localhost:8000
 ```
+
+### Published Image Environment Variables
+
+Create the root `.env` from [.env.example](.env.example):
+
+```bash
+GITHUB_OWNER_LOWER=your-github-owner
+SUPABASE_URL=your-supabase-url
+SUPABASE_KEY=your-supabase-key
+CORS_ORIGINS=https://your-frontend-domain.com
+CORS_ORIGIN_REGEX=^https://.*\.vercel\.app$
+```
+
+Use the root `.env` when running [docker-compose.yml](docker-compose.yml). The backend and frontend `.env` files are for local non-Docker development only.
 
 ---
 
@@ -227,6 +243,8 @@ Published image name:
 
 - `ghcr.io/<github-owner-lowercase>/amcs-navigator`
 
+The published image is what [docker-compose.yml](docker-compose.yml) pulls for server deployment.
+
 Tags generated automatically:
 
 - `latest` on default branch
@@ -251,8 +269,8 @@ How to set it:
 
 This repo includes:
 
-- `docker-compose.yml` (production container + auto-updater)
-- `.env.example` (required environment template)
+- `docker-compose.yml` (published image + auto-updater)
+- `.env.example` (root template for Docker/server deployment)
 - `backend/.env.example` (backend local development template)
 - `frontend/.env.example` (frontend local development template)
 
@@ -269,7 +287,7 @@ docker compose up -d
 
 `watchtower` checks every 30 seconds and updates the `amcs-navigator` container when a new `latest` image is available.
 
-If your GHCR package is private, run `docker login ghcr.io` on the server first (use a token with `read:packages`) so pulls can succeed.
+If the GHCR package is private, run `docker login ghcr.io` on the server first with a token that has `read:packages`.
 
 ---
 
@@ -352,5 +370,6 @@ This project is part of the AMCS Navigator initiative.
 ## Need Help?
 
 - Run `docker-compose logs -f` to see live logs
+- Run `docker compose logs -f` to see live logs
 - Visit `/docs` endpoint for API documentation
 - Open an issue on GitHub with error details
